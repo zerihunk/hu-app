@@ -35,12 +35,13 @@
         .btn { padding: 10px 18px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
         .btn-primary { background: var(--accent); color: white; }
         .btn-secondary { background: #95a5a6; color: white; }
+        .badge { background: #eee; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
         input, select, textarea { padding: 12px; border: 1px solid #ddd; border-radius: 6px; width: 100%; margin-top: 8px; box-sizing: border-box; font-family: inherit; }
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9999; align-items: center; justify-content: center; }
         .modal-content { background: white; padding: 30px; border-radius: 15px; width: 580px; max-height: 90vh; overflow-y: auto; }
-        .badge { background: #eee; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
-        .pane-box { flex: 1; border: 1px solid #ddd; border-radius: 6px; height: 200px; overflow-y: auto; background: white; }
+        .pane-box { flex: 1; border: 1px solid #ddd; border-radius: 6px; height: 180px; overflow-y: auto; background: white; }
         .pane-item { padding: 10px; border-bottom: 1px solid #f1f1f1; cursor: pointer; font-size: 14px; }
+        .pane-item:hover { background: #f0f7ff; }
         #loadingOverlay { position: fixed; inset:0; background: rgba(255,255,255,0.8); display: flex; align-items: center; justify-content: center; z-index: 11000; display: none; }
     </style>
 </head>
@@ -54,7 +55,6 @@
             <input type="text" id="lUser" placeholder="Login ID" autofocus>
             <input type="password" id="lPass" placeholder="Password" style="margin: 20px 0;">
             <button class="btn btn-primary" style="width:100%; justify-content: center;" onclick="doLogin()">Login</button>
-            <p id="loginError" style="color:red; font-size:12px; margin-top:10px; display:none;">Invalid credentials</p>
         </div>
     </div>
 
@@ -72,59 +72,63 @@
         <div class="nav-item active" onclick="nav('view-dash', this)"><i class="fas fa-chart-line"></i> <span class="nav-text">Dashboard</span></div>
         <div class="nav-item" onclick="nav('view-reg', this)"><i class="fas fa-user-plus"></i> <span class="nav-text">New Entry</span></div>
         <div id="nav-u" class="nav-item" style="display:none;" onclick="nav('view-users', this)"><i class="fas fa-users-cog"></i> <span class="nav-text">Staff Manager</span></div>
-        <div id="nav-s" class="nav-item" style="display:none;" onclick="nav('view-set', this)"><i class="fas fa-cogs"></i> <span class="nav-text">Settings</span></div>
+        <div id="nav-s" class="nav-item" style="display:none;" onclick="nav('view-set', this)"><i class="fas fa-cogs"></i> <span class="nav-text">System Settings</span></div>
         <div class="nav-item" style="margin-top:auto;" onclick="location.reload()"><i class="fas fa-power-off"></i> <span class="nav-text">Logout</span></div>
     </div>
 
     <div class="main">
         <div class="header"><h2 id="pageTitle">Dashboard</h2><div id="userBadge" style="font-weight:700; color:var(--accent);"></div></div>
         <div class="content">
+            
             <div id="view-dash" class="section">
                 <div class="stats-grid">
                     <div class="stat-card"><div>Total Cases</div><div class="stat-val" id="stTotal">0</div></div>
-                    <div class="stat-card" style="border-color: var(--warning);"><div>Pending</div><div class="stat-val" id="stProgress">0</div></div>
+                    <div class="stat-card" style="border-color: var(--warning);"><div>In Progress</div><div class="stat-val" id="stProgress">0</div></div>
                     <div class="stat-card" style="border-color: var(--success);"><div>Completed</div><div class="stat-val" id="stDone">0</div></div>
                     <div class="stat-card" style="border-color: var(--danger);"><div>Staff</div><div class="stat-val" id="stStaff">0</div></div>
                 </div>
                 <div class="card">
-                    <input type="text" id="searchTerm" placeholder="Search students..." oninput="render()" style="margin-bottom:20px;">
+                    <input type="text" id="searchTerm" placeholder="Search by name or department..." oninput="render()" style="margin-bottom:20px; border-color: var(--accent);">
                     <table>
-                        <thead><tr><th>Student Name</th><th>Department</th><th>Services</th><th>Status</th><th>Action</th></tr></thead>
+                        <thead><tr><th>Student Name</th><th>Department</th><th>Services</th><th>Current Step</th><th>Action</th></tr></thead>
                         <tbody id="dashTable"></tbody>
                     </table>
                 </div>
             </div>
 
             <div id="view-reg" class="section" style="display:none;">
-                <div class="card" style="max-width: 600px; margin: 0 auto;">
-                    <h3>New Registration</h3>
-                    <input type="text" id="inName" placeholder="Full Name">
-                    <input type="text" id="inDept" placeholder="Department">
-                    <div style="display:flex; gap:10px; margin-top:15px;">
-                        <div style="flex:1;"><small>Available Services</small><div class="pane-box" id="availServ"></div></div>
-                        <div style="flex:1;"><small>Selected</small><div class="pane-box" id="selServ"></div></div>
+                <div class="card" style="max-width: 800px; margin: 0 auto;">
+                    <h3>New Student Registration</h3>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                        <input type="text" id="inName" placeholder="STUDENT FULL NAME" style="text-transform: uppercase;">
+                        <input type="text" id="inDept" placeholder="Department">
                     </div>
-                    <button class="btn btn-primary" style="width:100%; margin-top:20px; justify-content:center;" onclick="saveNewReq()">Save Request</button>
+                    <div style="margin-top:15px;"><label style="font-weight: 700;">Select Services:</label>
+                        <div style="display:flex; gap:15px; margin-top:8px;">
+                            <div style="flex:1;"><small>Available</small><div class="pane-box" id="availServ"></div></div>
+                            <div style="flex:1;"><small style="color:var(--success);">Selected</small><div class="pane-box" id="selServ" style="background:#f0fdf4;"></div></div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" style="width:100%; margin-top:20px; justify-content:center;" onclick="saveNewReq()">Register Student</button>
                 </div>
             </div>
 
             <div id="view-users" class="section" style="display:none;">
                 <div class="card">
-                    <h3>Add Staff</h3>
+                    <h3>Register New Staff</h3>
                     <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
-                        <input type="text" id="uFull" placeholder="Name">
-                        <input type="text" id="uId" placeholder="Login ID">
-                        <input type="password" id="uPw" placeholder="Password">
+                        <input type="text" id="uFull" placeholder="Full Name"><input type="text" id="uId" placeholder="Login ID"><input type="password" id="uPw" placeholder="Password">
                     </div>
-                    <button class="btn btn-primary" style="margin-top:10px;" onclick="saveStaff()">Add User</button>
+                    <button class="btn btn-primary" style="margin-top:15px;" onclick="saveStaff()">Add Staff</button>
                 </div>
                 <div class="card"><table><thead><tr><th>Name</th><th>Login</th><th>Status</th><th>Action</th></tr></thead><tbody id="staffTable"></tbody></table></div>
             </div>
+
         </div>
     </div>
 
 <script>
-    // --- FIREBASE CONFIG ---
+    // --- FIREBASE CONFIG (SAME AS YOURS) ---
     const firebaseConfig = {
         apiKey: "AIzaSyCuA6hUsOEvLDGsXYpVTZa7a7ArUcrP-1c",
         authDomain: "hu-registrar.firebaseapp.com",
@@ -138,12 +142,12 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let config = { services: ["Original Degree", "Transcript"], roles: ["Registrar", "Finance"], rooms: ["Room 01"] };
+    let config = { services: ["Original Degree", "Transcript", "Letter", "Replacement"], roles: ["Registrar", "Finance"], rooms: ["Room 01"] };
     let users = [];
     let reqs = [];
-    let currentUser = null, tmpS = [], tmpR = [];
+    let currentUser = null, tmpS = [];
 
-    // --- INITIAL DATA FETCH (Run once at start) ---
+    // Pre-fetch users for login
     db.ref('users').once('value', (snap) => {
         const val = snap.val();
         users = val ? Object.values(val) : [];
@@ -153,9 +157,8 @@
         const u = document.getElementById('lUser').value.trim();
         const p = document.getElementById('lPass').value.trim();
         
-        // --- EMERGENCY BYPASS (If DB is empty) ---
         if(u === "admin" && p === "admin123") {
-            loginSuccess({name:"Admin", login:"admin", userRoles:["Admin"], office:"Main", isActive:true});
+            loginSuccess({name:"Admin User", login:"admin", userRoles:["Admin"], isActive:true});
             return;
         }
 
@@ -163,9 +166,7 @@
         if(found) {
             if(found.isActive === false) return alert("Account Deactivated");
             loginSuccess(found);
-        } else {
-            document.getElementById('loginError').style.display = 'block';
-        }
+        } else alert("Invalid Login Credentials!");
     }
 
     function loginSuccess(user) {
@@ -190,26 +191,31 @@
         if(!currentUser) return;
         document.getElementById('userBadge').innerText = currentUser.name;
         document.getElementById('stTotal').innerText = reqs.length;
+        document.getElementById('stProgress').innerText = reqs.filter(r => r.step !== 'COMPLETE').length;
+        document.getElementById('stDone').innerText = reqs.filter(r => r.step === 'COMPLETE').length;
         document.getElementById('stStaff').innerText = users.length;
 
-        // Dashboard
         const term = document.getElementById('searchTerm').value.toUpperCase();
-        document.getElementById('dashTable').innerHTML = reqs.filter(r => r.name.includes(term)).map(r => `
+        const filtered = reqs.filter(r => r.name.includes(term) || r.dept.toUpperCase().includes(term));
+
+        document.getElementById('dashTable').innerHTML = filtered.map(r => `
             <tr>
-                <td>${r.name}</td>
+                <td style="font-weight:700; color:var(--primary);">${r.name}</td>
                 <td>${r.dept}</td>
                 <td>${(r.servs||[]).join(", ")}</td>
-                <td><span class="badge">${r.step}</span></td>
-                <td><button class="btn btn-secondary" onclick="delReq('${r.id}')">Delete</button></td>
+                <td><span class="badge" style="background:#e3f2fd; color:#1976d2;">${r.step}</span></td>
+                <td>
+                    <button class="btn btn-secondary" style="padding:5px;" onclick="delReq('${r.id}')"><i class="fas fa-trash"></i></button>
+                    <button class="btn btn-primary" style="padding:5px;" onclick="moveStep('${r.id}')">Process</button>
+                </td>
             </tr>
         `).join('');
 
-        // Staff
         document.getElementById('staffTable').innerHTML = users.map(u => `
             <tr>
                 <td>${u.name}</td><td>${u.login}</td>
-                <td>${u.isActive?'Active':'Off'}</td>
-                <td><button onclick="delUser('${u.login}')">X</button></td>
+                <td><span class="badge">${u.isActive?'Active':'Disabled'}</span></td>
+                <td><button class="btn btn-secondary" onclick="delUser('${u.login}')">Remove</button></td>
             </tr>
         `).join('');
 
@@ -218,30 +224,43 @@
 
     function saveNewReq() {
         const name = document.getElementById('inName').value.toUpperCase();
-        if(!name) return alert("Enter Name");
-        const id = "R" + Date.now();
-        const data = { id, name, dept: document.getElementById('inDept').value, servs: tmpS, step: "START" };
-        db.ref('reqs/' + id).set(data);
-        tmpS = []; document.getElementById('inName').value = "";
+        if(!name || tmpS.length === 0) return alert("Please enter name and select services");
+        const id = "REQ" + Date.now();
+        db.ref('reqs/' + id).set({
+            id, name, dept: document.getElementById('inDept').value, servs: tmpS, step: "PENDING", time: new Date().toLocaleString()
+        });
+        tmpS = []; document.getElementById('inName').value = ""; document.getElementById('inDept').value = "";
         nav('view-dash', document.querySelector('.nav-item'));
+    }
+
+    function moveStep(id) {
+        const r = reqs.find(x => x.id === id);
+        const next = r.step === "PENDING" ? "PROCESSING" : "COMPLETE";
+        db.ref('reqs/' + id + '/step').set(next);
     }
 
     function saveStaff() {
         const id = document.getElementById('uId').value;
-        const data = { name: document.getElementById('uFull').value, login: id, pass: document.getElementById('uPw').value, userRoles: ["Staff"], isActive: true };
-        db.ref('users/' + id).set(data);
+        if(!id) return;
+        db.ref('users/' + id).set({
+            name: document.getElementById('uFull').value, login: id, pass: document.getElementById('uPw').value, userRoles: ["Staff"], isActive: true
+        });
+        alert("Staff Added!");
     }
 
-    function delReq(id) { if(confirm("Delete?")) db.ref('reqs/'+id).remove(); }
-    function delUser(id) { if(confirm("Delete?")) db.ref('users/'+id).remove(); }
+    function delReq(id) { if(confirm("Delete this request?")) db.ref('reqs/'+id).remove(); }
+    function delUser(id) { if(confirm("Delete this user?")) db.ref('users/'+id).remove(); }
+    
     function nav(id, el) {
         document.querySelectorAll('.section').forEach(s => s.style.display='none');
         document.getElementById(id).style.display='block';
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         el.classList.add('active');
+        document.getElementById('pageTitle').innerText = el.innerText;
     }
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
     function renderPanes() {
+        if(!document.getElementById('availServ')) return;
         document.getElementById('availServ').innerHTML = config.services.filter(s => !tmpS.includes(s)).map(s => `<div class="pane-item" onclick="tmpS.push('${s}'); renderPanes()">${s}</div>`).join('');
         document.getElementById('selServ').innerHTML = tmpS.map(s => `<div class="pane-item" onclick="tmpS=tmpS.filter(x=>x!==s); renderPanes()">${s}</div>`).join('');
     }

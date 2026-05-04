@@ -36,27 +36,18 @@
         .btn-primary { background: var(--accent); color: white; }
         .btn-secondary { background: #95a5a6; color: white; }
         .badge { background: #eee; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
-        .status-pill { padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: bold; }
-        .status-active { background: #e8f5e9; color: #2e7d32; }
-        .status-inactive { background: #ffebee; color: #c62828; }
         input, select, textarea { padding: 12px; border: 1px solid #ddd; border-radius: 6px; width: 100%; margin-top: 8px; box-sizing: border-box; font-family: inherit; }
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9999; align-items: center; justify-content: center; }
-        .modal-content { background: white; padding: 30px; border-radius: 15px; width: 580px; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow); }
-        .pane-box { flex: 1; border: 1px solid #ddd; border-radius: 6px; height: 200px; overflow-y: auto; background: white; }
-        .pane-item { padding: 10px; border-bottom: 1px solid #f1f1f1; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 14px; transition: 0.2s; }
-        .pane-item:hover { background: #f8f9fa; color: var(--accent); }
-        .note-tag { background: #fff9c4; border: 1px solid #fbc02d; color: #7f6000; padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; margin: 2px; display: inline-block; font-weight: 600; }
-        .row-complete { background-color: #e8f5e9 !important; border-left: 5px solid var(--success); }
-        .row-locked { opacity: 0.6; cursor: not-allowed; background-color: #fcfcfc; }
-        .detail-text { font-size: 12px; color: #666; line-height: 1.4; }
-        .quick-note { background: #f0f4f8; padding: 5px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; border: 1px solid #d1d9e6; transition: 0.2s; }
-        .quick-note:hover { background: var(--accent); color: white; }
-        #loadingOverlay { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: flex; align-items: center; justify-content: center; z-index: 11000; display: none; }
+        .modal-content { background: white; padding: 30px; border-radius: 15px; width: 580px; max-height: 90vh; overflow-y: auto; }
+        .pane-box { flex: 1; border: 1px solid #ddd; border-radius: 6px; height: 180px; overflow-y: auto; background: white; }
+        .pane-item { padding: 10px; border-bottom: 1px solid #f1f1f1; cursor: pointer; font-size: 14px; display: flex; justify-content: space-between; }
+        .pane-item:hover { background: #f0f7ff; }
+        #loadingOverlay { position: fixed; inset:0; background: rgba(255,255,255,0.8); display: flex; align-items: center; justify-content: center; z-index: 11000; display: none; }
     </style>
 </head>
 <body>
 
-    <div id="loadingOverlay"><div><i class="fas fa-spinner fa-spin fa-2x"></i> Connecting...</div></div>
+    <div id="loadingOverlay"><div><i class="fas fa-spinner fa-spin fa-2x"></i> Syncing...</div></div>
 
     <div id="loginScreen" style="position:fixed; inset:0; background:var(--sidebar); display:flex; align-items:center; justify-content:center; z-index:10000;">
         <div style="background: white; padding: 45px; border-radius: 20px; width: 350px; text-align: center;">
@@ -88,6 +79,7 @@
     <div class="main">
         <div class="header"><h2 id="pageTitle">Dashboard</h2><div id="userBadge" style="font-weight:700; color:var(--accent);"></div></div>
         <div class="content">
+            
             <div id="view-dash" class="section">
                 <div class="stats-grid">
                     <div class="stat-card"><div>Total Cases</div><div class="stat-val" id="stTotal">0</div></div>
@@ -95,15 +87,10 @@
                     <div class="stat-card" style="border-color: var(--success);"><div>Completed</div><div class="stat-val" id="stDone">0</div></div>
                     <div class="stat-card" style="border-color: var(--danger);"><div>Staff</div><div class="stat-val" id="stStaff">0</div></div>
                 </div>
-                <div class="card" style="margin-bottom: 15px; padding: 15px;">
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        <i class="fas fa-search" style="color: #7f8c8d;"></i>
-                        <input type="text" id="searchTerm" placeholder="Search name, dept, or degree..." oninput="render()" style="margin-top: 0; border-color: var(--accent);">
-                    </div>
-                </div>
                 <div class="card">
+                    <input type="text" id="searchTerm" placeholder="Search..." oninput="render()" style="margin-bottom:20px; border-color: var(--accent);">
                     <table>
-                        <thead><tr><th>Student Name</th><th>Details</th><th>Services</th><th>Status</th><th>Allocation</th><th>Action</th></tr></thead>
+                        <thead><tr><th>Student Name</th><th>Department</th><th>Services</th><th>Status</th><th>Action</th></tr></thead>
                         <tbody id="dashTable"></tbody>
                     </table>
                 </div>
@@ -111,21 +98,17 @@
 
             <div id="view-reg" class="section" style="display:none;">
                 <div class="card" style="max-width: 800px; margin: 0 auto;">
-                    <h3>Student Registration</h3>
+                    <h3>New Student Registration</h3>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
                         <input type="text" id="inName" placeholder="STUDENT FULL NAME" style="text-transform: uppercase;">
                         <input type="text" id="inDept" placeholder="Department">
-                        <select id="inDeg"><option value="">Degree Type</option><option>Certificate</option><option>Degree</option><option>Masters</option><option>PhD</option></select>
-                        <select id="inMod"><option value="">Modality</option><option>Regular</option><option>Evening</option><option>Summer</option><option>Weekend</option></select>
-                        <div>
-                            <label style="font-size: 12px; color: #7f8c8d; font-weight: 600;">AWARD DATE:</label>
-                            <input type="date" id="inDate" style="margin-top: 4px;">
-                        </div>
+                        <select id="inDeg"><option value="">Degree Type</option><option>Degree</option><option>Masters</option></select>
+                        <select id="inMod"><option value="">Modality</option><option>Regular</option><option>Summer</option></select>
                     </div>
                     <div style="margin-top:15px;"><label style="font-weight: 700;">Select Services:</label>
                         <div style="display:flex; gap:15px; margin-top:8px;">
                             <div style="flex:1;"><small>Available</small><div class="pane-box" id="availServ"></div></div>
-                            <div style="flex:1;"><small style="color: var(--success);">Selected</small><div class="pane-box" id="selServ" style="background:#f0fdf4;"></div></div>
+                            <div style="flex:1;"><small style="color:var(--success);">Selected</small><div class="pane-box" id="selServ" style="background:#f0fdf4;"></div></div>
                         </div>
                     </div>
                     <button class="btn btn-primary" style="width:100%; margin-top:20px; justify-content:center;" onclick="saveNewReq()">Register Student</button>
@@ -138,16 +121,9 @@
                     <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
                         <input type="text" id="uFull" placeholder="Full Name"><input type="text" id="uId" placeholder="Login ID"><input type="password" id="uPw" placeholder="Password">
                     </div>
-                    <div style="margin-top:15px;"><label>Office & Roles:</label>
-                        <select id="uRoom" style="margin-bottom:10px;"></select>
-                        <div style="display:flex; gap:10px; margin-top:5px;">
-                            <div style="flex:1;"><small>Available Roles</small><div class="pane-box" id="availRoles"></div></div>
-                            <div style="flex:1;"><small style="color:var(--accent);">Selected Roles</small><div class="pane-box" id="selRoles" style="background:#eff6ff;"></div></div>
-                        </div>
-                    </div>
                     <button class="btn btn-primary" style="margin-top:15px;" onclick="saveStaff()">Add Staff</button>
                 </div>
-                <div class="card"><table><thead><tr><th>Name</th><th>Login ID</th><th>Office</th><th>Status</th><th>Actions</th></tr></thead><tbody id="staffTable"></tbody></table></div>
+                <div class="card"><table><thead><tr><th>Name</th><th>Login</th><th>Status</th><th>Action</th></tr></thead><tbody id="staffTable"></tbody></table></div>
             </div>
 
             <div id="view-set" class="section" style="display:none;">
@@ -161,7 +137,7 @@
     </div>
 
 <script>
-    // --- FIREBASE CONFIG ---
+    // --- FIREBASE ---
     const firebaseConfig = {
         apiKey: "AIzaSyCuA6hUsOEvLDGsXYpVTZa7a7ArUcrP-1c",
         authDomain: "hu-registrar.firebaseapp.com",
@@ -176,28 +152,19 @@
     const db = firebase.database();
 
     let config = { services: ["Original Degree", "Transcript"], roles: ["Registrar", "Finance"], rooms: ["Room 01"] };
-    let users = [];
-    let reqs = [];
-    let currentUser = null, tmpS = [], tmpR = [];
-    const notes = ["File incomplete", "Payment not cleared", "Registrar unavailable"];
+    let users = []; let reqs = []; let currentUser = null, tmpS = [];
 
-    // Initial Login Bypass & User Fetch
-    db.ref('users').once('value', snap => { 
-        users = snap.val() ? Object.values(snap.val()) : []; 
-    });
+    db.ref('users').once('value', snap => { users = snap.val() ? Object.values(snap.val()) : []; });
 
     function doLogin() {
         const u = document.getElementById('lUser').value.trim();
         const p = document.getElementById('lPass').value.trim();
         if(u === "admin" && p === "admin123") {
-            loginSuccess({name:"Admin", login:"admin", userRoles:["Admin"], isActive:true, office:"Main"});
+            loginSuccess({name:"Admin", login:"admin", userRoles:["Admin"], isActive:true});
             return;
         }
         const found = users.find(x => x.login === u && x.pass === p);
-        if(found) {
-            if(found.isActive === false) return alert("Account Disabled");
-            loginSuccess(found);
-        } else alert("Invalid Login!");
+        if(found) loginSuccess(found); else alert("Invalid!");
     }
 
     function loginSuccess(user) {
@@ -220,35 +187,24 @@
     function render() {
         if(!currentUser) return;
         const term = document.getElementById('searchTerm').value.toUpperCase();
-        
         document.getElementById('stTotal').innerText = reqs.length;
         document.getElementById('userBadge').innerText = currentUser.name;
-        if(document.getElementById('uRoom')) document.getElementById('uRoom').innerHTML = config.rooms.map(r=>`<option>${r}</option>`).join('');
-
-        const isAdmin = currentUser.userRoles.includes("Admin");
 
         document.getElementById('dashTable').innerHTML = reqs.filter(r => r.name.includes(term)).map(r => `
-            <tr class="${r.step==='COMPLETE'?'row-complete':''}">
-                <td onclick="openHist('${r.id}')" style="color:var(--accent); cursor:pointer; font-weight:700;">${r.name}</td>
-                <td><div class="detail-text">${r.dept} | ${r.deg}</div></td>
+            <tr>
+                <td style="font-weight:700; color:var(--accent);">${r.name}</td>
+                <td>${r.dept}</td>
                 <td>${(r.servs||[]).join(", ")}</td>
                 <td><span class="badge">${r.step}</span></td>
                 <td>
-                    <select id="nr-${r.id}" style="font-size:11px;">
-                        ${config.roles.map(x=>`<option ${r.step===x?'selected':''}>${x}</option>`).join('')}
-                        <option value="COMPLETE" ${r.step==='COMPLETE'?'selected':''}>COMPLETE</option>
-                    </select>
-                </td>
-                <td>
-                    <button class="btn btn-primary" style="padding:4px 8px;" onclick="processStep('${r.id}')">Send</button>
-                    ${isAdmin ? `<i class="fas fa-trash" style="color:red; cursor:pointer; margin-left:10px;" onclick="delReq('${r.id}')"></i>`:''}
+                    <button class="btn btn-primary" onclick="processStep('${r.id}')">Process</button>
+                    <i class="fas fa-trash" style="color:red; margin-left:10px; cursor:pointer;" onclick="delReq('${r.id}')"></i>
                 </td>
             </tr>
         `).join('');
 
         document.getElementById('staffTable').innerHTML = users.map(u => `
-            <tr><td>${u.name}</td><td>${u.login}</td><td>${u.office}</td>
-            <td><span class="status-pill ${u.isActive?'status-active':'status-inactive'}">${u.isActive?'Active':'Off'}</span></td>
+            <tr><td>${u.name}</td><td>${u.login}</td><td>${u.isActive}</td>
             <td><i class="fas fa-trash" style="color:red; cursor:pointer;" onclick="delUser('${u.login}')"></i></td></tr>
         `).join('');
 
@@ -258,48 +214,29 @@
 
     function renderPanes() {
         if(!document.getElementById('availServ')) return;
-        document.getElementById('availServ').innerHTML = config.services.filter(x => !tmpS.includes(x)).map(x => `<div class="pane-item" onclick="tmpS.push('${x}'); renderPanes();">${x} +</div>`).join('');
-        document.getElementById('selServ').innerHTML = tmpS.map(x => `<div class="pane-item" onclick="tmpS=tmpS.filter(v=>v!=='${x}'); renderPanes();">${x} -</div>`).join('');
-        document.getElementById('availRoles').innerHTML = config.roles.filter(x=>!tmpR.includes(x)).map(x=>`<div class="pane-item" onclick="tmpR.push('${x}'); renderPanes();">${x} +</div>`).join('');
-        document.getElementById('selRoles').innerHTML = tmpR.map(x=>`<div class="pane-item" onclick="tmpR=tmpR.filter(v=>v!=='${x}'); renderPanes();">${x} -</div>`).join('');
+        document.getElementById('availServ').innerHTML = config.services.filter(x => !tmpS.includes(x)).map(x => `<div class="pane-item" onclick="tmpS.push('${x}'); renderPanes();">${x} <span>+</span></div>`).join('');
+        document.getElementById('selServ').innerHTML = tmpS.map(x => `<div class="pane-item" onclick="tmpS=tmpS.filter(v=>v!=='${x}'); renderPanes();">${x} <span>-</span></div>`).join('');
     }
 
     function saveNewReq() {
         const id = "REQ" + Date.now();
-        const data = {
+        db.ref('reqs/'+id).set({
             id, name: document.getElementById('inName').value.toUpperCase(),
             dept: document.getElementById('inDept').value, deg: document.getElementById('inDeg').value,
-            servs: tmpS, step: config.roles[0], room: config.rooms[0],
-            history: [{step: "Registered", by: currentUser.name, time: new Date().toLocaleString()}]
-        };
-        db.ref('reqs/'+id).set(data);
-        tmpS = []; document.getElementById('inName').value='';
-        nav('view-dash', document.querySelector('.nav-item'));
+            servs: tmpS, step: "PENDING", time: new Date().toLocaleString()
+        });
+        tmpS = []; document.getElementById('inName').value=''; nav('view-dash', document.querySelector('.nav-item'));
     }
 
     function processStep(id) {
-        const nr = document.getElementById('nr-'+id).value;
         const r = reqs.find(x => x.id === id);
-        const hist = r.history || [];
-        hist.push({step: nr, by: currentUser.name, time: new Date().toLocaleString()});
-        db.ref('reqs/'+id).update({step: nr, history: hist});
-    }
-
-    function openHist(id) {
-        const r = reqs.find(x => x.id === id);
-        document.getElementById('modalTitle').innerText = r.name + " History";
-        document.getElementById('modalBody').innerHTML = r.history.map(h => `<div><b>${h.step}</b> - ${h.by} (${h.time})</div>`).join('<hr>');
-        document.getElementById('modalFooter').innerHTML = `<button class="btn btn-secondary" onclick="closeModal()">Close</button>`;
-        document.getElementById('appModal').style.display='flex';
+        const next = r.step === "PENDING" ? "COMPLETED" : "PENDING";
+        db.ref('reqs/'+id).update({step: next});
     }
 
     function saveStaff() {
         const id = document.getElementById('uId').value;
-        db.ref('users/'+id).set({
-            name: document.getElementById('uFull').value, login: id, pass: document.getElementById('uPw').value,
-            office: document.getElementById('uRoom').value, userRoles: tmpR, isActive: true
-        });
-        tmpR = []; render();
+        db.ref('users/'+id).set({ name: document.getElementById('uFull').value, login: id, pass: document.getElementById('uPw').value, userRoles: ["Staff"], isActive: true });
     }
 
     function addSet(k, id) {
@@ -311,7 +248,6 @@
     function delUser(id) { if(confirm("Delete?")) db.ref('users/'+id).remove(); }
     function nav(id, el) { document.querySelectorAll('.section').forEach(s => s.style.display='none'); document.getElementById(id).style.display='block'; document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); el.classList.add('active'); }
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
-    function closeModal() { document.getElementById('appModal').style.display='none'; }
     function renderSettingsLists() {
         const dL = (id, arr, k) => { if(document.getElementById(id)) document.getElementById(id).innerHTML = arr.map((x, idx) => `<div>${x} <i class="fas fa-trash" onclick="config['${k}'].splice(${idx},1); db.ref('config').set(config)"></i></div>`).join(''); }
         dL('listS', config.services, 'services'); dL('listR', config.roles, 'roles'); dL('listRm', config.rooms, 'rooms');

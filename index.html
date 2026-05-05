@@ -20,7 +20,6 @@
         .toggle-btn { position: absolute; right: -15px; top: 25px; background: var(--accent); color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid white; z-index: 100; }
         .sidebar-brand { padding: 30px 20px; font-size: 22px; font-weight: 800; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: center; color: var(--accent); }
         .nav-item { padding: 18px 25px; cursor: pointer; display: flex; align-items: center; color: #95a5a6; transition: 0.2s; white-space: nowrap; }
-        .nav-item:hover { color: white; background: rgba(255,255,255,0.05); }
         .nav-item.active { background: rgba(255,255,255,0.05); color: white; border-left: 4px solid var(--accent); }
         .main { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
         .header { height: 75px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 30px; }
@@ -30,18 +29,18 @@
         .stat-val { font-size: 24px; font-weight: 800; }
         .card { background: white; border-radius: 12px; box-shadow: var(--shadow); overflow: hidden; margin-bottom: 25px; padding: 25px; }
         table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 12px; font-size: 14px; border-bottom: 2px solid #eee; color: #7f8c8d; }
+        th { text-align: left; padding: 12px; font-size: 13px; border-bottom: 2px solid #eee; color: #7f8c8d; }
         td { padding: 12px; border-bottom: 1px solid #f9f9f9; font-size: 14px; }
         .btn { padding: 10px 18px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
         .btn-primary { background: var(--accent); color: white; }
-        input, select, textarea { padding: 12px; border: 1px solid #ddd; border-radius: 6px; width: 100%; margin-top: 8px; box-sizing: border-box; font-size: 14px; }
+        input, select { padding: 10px; border: 1px solid #ddd; border-radius: 6px; width: 100%; margin-top: 5px; box-sizing: border-box; }
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9999; align-items: center; justify-content: center; }
         .modal-content { background: white; padding: 30px; border-radius: 15px; width: 500px; max-height: 80vh; overflow-y: auto; }
-        .set-list-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f8f9fa; margin-top: 5px; border-radius: 5px; border: 1px solid #eee; font-size: 13px; }
+        .set-list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f8f9fa; margin-top: 5px; border-radius: 5px; border: 1px solid #eee; }
         .pane-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px; }
         .pane-box { border: 1px solid #ddd; border-radius: 8px; height: 200px; overflow-y: auto; background: #fff; }
         .pane-item { padding: 10px; border-bottom: 1px solid #f1f1f1; cursor: pointer; font-size: 12px; display: flex; justify-content: space-between; }
-        .badge-s { background: #e1f5fe; color: #0288d1; padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; margin: 2px; display: inline-block; }
+        .badge-s { background: #e1f5fe; color: #0288d1; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin: 2px; display: inline-block; }
     </style>
 </head>
 <body>
@@ -49,15 +48,13 @@
     <div id="loginScreen" style="position:fixed; inset:0; background:var(--sidebar); display:flex; align-items:center; justify-content:center; z-index:10000;">
         <div style="background: white; padding: 45px; border-radius: 20px; width: 350px; text-align: center;">
             <h2 style="color: var(--primary);">HU Registrar</h2>
-            <input type="text" id="lUser" placeholder="Login ID" onkeypress="handleLoginKey(event)">
-            <input type="password" id="lPass" placeholder="Password" style="margin: 20px 0;" onkeypress="handleLoginKey(event)">
+            <input type="text" id="lUser" placeholder="Login ID">
+            <input type="password" id="lPass" placeholder="Password" style="margin: 20px 0;">
             <button class="btn btn-primary" style="width:100%; justify-content: center;" onclick="doLogin()">Login</button>
         </div>
     </div>
 
-    <div id="appModal" class="modal">
-        <div class="modal-content" id="modalUI"></div>
-    </div>
+    <div id="appModal" class="modal"><div class="modal-content" id="modalUI"></div></div>
 
     <div class="sidebar" id="sidebar">
         <div class="toggle-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></div>
@@ -84,9 +81,9 @@
                     <div class="stat-card" style="border-color: var(--danger);"><div>Users</div><div class="stat-val" id="stUsers">0</div></div>
                 </div>
                 <div class="card">
-                    <input type="text" id="searchTerm" placeholder="Search..." oninput="render()" style="margin-top: 0; margin-bottom: 20px;">
+                    <input type="text" id="searchTerm" placeholder="Search students..." oninput="render()" style="margin-bottom: 20px;">
                     <table>
-                        <thead><tr><th>Student Name</th><th>Details</th><th>Services</th><th>Status</th><th>Allocation</th><th>Action</th></tr></thead>
+                        <thead><tr><th>Student Name</th><th>Services</th><th>Current Office</th><th>Forward To</th><th>Action</th></tr></thead>
                         <tbody id="dashTable"></tbody>
                     </table>
                 </div>
@@ -96,17 +93,21 @@
                 <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:15px;">
                     <div class="card">
                         <h4>Manage Services</h4>
-                        <div style="display:flex; gap:5px;"><input id="setS" placeholder="Service..."><button class="btn btn-primary" onclick="addSet('services','setS')">+</button></div>
-                        <div id="listS" style="margin-top:10px;"></div>
+                        <div style="display:flex; gap:5px;"><input id="setS" placeholder="Service Name"><button class="btn btn-primary" onclick="addSet('services','setS')">+</button></div>
+                        <div id="listS"></div>
                     </div>
                     <div class="card">
                         <h4>Manage Roles</h4>
-                        <div style="display:flex; gap:5px;"><input id="setR" placeholder="Role..."><button class="btn btn-primary" onclick="addSet('roles','setR')">+</button></div>
-                        <div id="listR" style="margin-top:10px;"></div>
+                        <div style="display:flex; gap:5px;"><input id="setR" placeholder="Role Name"><button class="btn btn-primary" onclick="addSet('roles','setR')">+</button></div>
+                        <div id="listR"></div>
                     </div>
                     <div class="card">
                         <h4>Manage Offices</h4>
-                        <div style="display:flex; gap:5px;"><input id="setO" placeholder="Office..."><button class="btn btn-primary" onclick="addSet('offices','setO')">+</button></div>
+                        <input id="setOName" placeholder="Office Name">
+                        <div style="display:flex; gap:5px; margin-top:5px;">
+                            <input id="setONum" placeholder="Office No.">
+                            <button class="btn btn-primary" onclick="addOffice()">+</button>
+                        </div>
                         <div id="listO" style="margin-top:10px;"></div>
                     </div>
                 </div>
@@ -114,14 +115,14 @@
 
             <div id="view-reg" class="section" style="display:none;">
                 <div class="card" style="max-width: 800px; margin: 0 auto;">
-                    <h3>New Student Entry</h3>
-                    <input type="text" id="inName" placeholder="STUDENT NAME" style="text-transform: uppercase;">
+                    <h3>New Entry</h3>
+                    <input type="text" id="inName" placeholder="FULL NAME" style="text-transform: uppercase;">
                     <input type="text" id="inDept" placeholder="Department">
                     <div class="pane-container">
                         <div><small>Available Services</small><div class="pane-box" id="availS"></div></div>
                         <div><small>Selected Services</small><div class="pane-box" id="selS" style="background:#f0f9ff;"></div></div>
                     </div>
-                    <button class="btn btn-primary" style="width:100%; margin-top:20px;" onclick="saveEntry()">Save Entry</button>
+                    <button class="btn btn-primary" style="width:100%; margin-top:20px;" onclick="saveEntry()">Save Student</button>
                 </div>
             </div>
 
@@ -134,7 +135,6 @@
                     <table style="margin-top:20px;"><thead><tr><th>Name</th><th>ID</th></tr></thead><tbody id="userTable"></tbody></table>
                 </div>
             </div>
-
         </div>
     </div>
 
@@ -153,7 +153,6 @@
 
     let state = { config: {services:[], roles:[], offices:[]}, users: [], reqs: [], currentUser: null, selectedServices: [] };
 
-    function handleLoginKey(e) { if(e.key === "Enter") doLogin(); }
     function doLogin() {
         const u = document.getElementById('lUser').value.trim();
         const p = document.getElementById('lPass').value.trim();
@@ -175,8 +174,6 @@
     function syncData() {
         db.ref('config').on('value', s => { 
             state.config = s.val() || {services:[], roles:[], offices:[]}; 
-            if(!state.config.services) state.config.services = [];
-            if(!state.config.roles) state.config.roles = [];
             if(!state.config.offices) state.config.offices = [];
             render(); 
         });
@@ -193,17 +190,16 @@
         document.getElementById('stDone').innerText = state.reqs.filter(r => r.step === 'COMPLETE').length;
         document.getElementById('stUsers').innerText = state.users.length;
 
-        // Dashboard Table - Allocation comes from Offices
+        // Dashboard
         document.getElementById('dashTable').innerHTML = state.reqs.filter(r => r.name.includes(term)).map(r => `
             <tr>
                 <td onclick="viewHistory('${r.id}')" style="cursor:pointer; color:var(--accent); font-weight:700;">${r.name}</td>
-                <td><small>${r.dept}</small></td>
                 <td>${(r.servs || []).map(s => `<span class="badge-s">${s}</span>`).join('')}</td>
                 <td><span style="font-size:11px; background:#eee; padding:2px 5px; border-radius:4px;">${r.step}</span></td>
                 <td>
                     <select id="sel-${r.id}">
-                        ${state.config.offices.map(o=>`<option ${r.step===o?'selected':''}>${o}</option>`).join('')}
-                        <option value="COMPLETE" ${r.step==='COMPLETE'?'selected':''}>COMPLETE</option>
+                        ${state.config.offices.map(o=>`<option value="${o.name} (No. ${o.num})">${o.name} (#${o.num})</option>`).join('')}
+                        <option value="COMPLETE">COMPLETE</option>
                     </select>
                 </td>
                 <td><button class="btn btn-primary" onclick="forward('${r.id}')"><i class="fas fa-paper-plane"></i></button></td>
@@ -211,40 +207,53 @@
         `).join('');
 
         // Settings Lists
-        const listUI = (id, arr, key) => { 
+        const drawList = (id, arr, key) => {
             document.getElementById(id).innerHTML = (arr || []).map((x, i) => `
-                <div class="set-list-item">${x} <i class="fas fa-trash" onclick="remSet('${key}',${i})" style="color:red; cursor:pointer;"></i></div>
-            `).join(''); 
+                <div class="set-list-item">${typeof x === 'object' ? x.name + ' (#' + x.num + ')' : x} 
+                <i class="fas fa-trash" onclick="remSet('${key}',${i})" style="color:red; cursor:pointer;"></i></div>
+            `).join('');
         };
-        listUI('listS', state.config.services, 'services');
-        listUI('listR', state.config.roles, 'roles');
-        listUI('listO', state.config.offices, 'offices');
+        drawList('listS', state.config.services, 'services');
+        drawList('listR', state.config.roles, 'roles');
+        drawList('listO', state.config.offices, 'offices');
 
-        // Available Services in Registration
-        document.getElementById('availS').innerHTML = state.config.services.filter(s => !state.selectedServices.includes(s)).map(s => `
-            <div class="pane-item" onclick="toggleServ('${s}', true)">${s} <i class="fas fa-plus"></i></div>
-        `).join('');
+        // Services Panes
+        document.getElementById('availS').innerHTML = (state.config.services || []).filter(s => !state.selectedServices.includes(s)).map(s => `
+            <div class="pane-item" onclick="toggleServ('${s}', true)">${s} <i class="fas fa-plus"></i></div>`).join('');
         document.getElementById('selS').innerHTML = state.selectedServices.map(s => `
-            <div class="pane-item" onclick="toggleServ('${s}', false)">${s} <i class="fas fa-minus" style="color:red"></i></div>
-        `).join('');
+            <div class="pane-item" onclick="toggleServ('${s}', false)">${s} <i class="fas fa-minus" style="color:red"></i></div>`).join('');
 
         document.getElementById('userTable').innerHTML = state.users.map(u => `<tr><td>${u.name}</td><td>${u.login}</td></tr>`).join('');
     }
 
-    function addSet(k, id) { 
-        const v = document.getElementById(id).value.trim(); 
-        if(v){ 
-            if(!state.config[k]) state.config[k] = [];
-            state.config[k].push(v); 
-            db.ref('config').set(state.config); 
-            document.getElementById(id).value=''; 
-        } 
+    // Office specific add
+    function addOffice() {
+        const name = document.getElementById('setOName').value.trim();
+        const num = document.getElementById('setONum').value.trim();
+        if(name && num) {
+            if(!state.config.offices) state.config.offices = [];
+            state.config.offices.push({name: name, num: num});
+            db.ref('config').set(state.config);
+            document.getElementById('setOName').value = '';
+            document.getElementById('setONum').value = '';
+        }
     }
+
+    function addSet(k, id) {
+        const v = document.getElementById(id).value.trim();
+        if(v) {
+            if(!state.config[k]) state.config[k] = [];
+            state.config[k].push(v);
+            db.ref('config').set(state.config);
+            document.getElementById(id).value = '';
+        }
+    }
+
     function remSet(k, i) { state.config[k].splice(i, 1); db.ref('config').set(state.config); }
 
     function forward(id) {
         const next = document.getElementById('sel-'+id).value;
-        const note = prompt("Note:");
+        const note = prompt("Forwarding Note:");
         if(note === null) return;
         const r = state.reqs.find(x => x.id === id);
         r.step = next;
@@ -254,13 +263,13 @@
 
     function saveEntry() {
         const name = document.getElementById('inName').value.trim();
-        if(!name || state.selectedServices.length === 0) return alert("Missing info");
+        if(!name || state.selectedServices.length === 0) return alert("Fill Name and Services");
         const id = "ST" + Date.now();
+        const startOffice = state.config.offices[0] ? `${state.config.offices[0].name} (No. ${state.config.offices[0].num})` : "Registration";
         const entry = {
             id: id, name: name.toUpperCase(), dept: document.getElementById('inDept').value,
-            servs: [...state.selectedServices],
-            step: state.config.offices[0] || "Entry",
-            history: [{step: "Registered", by: state.currentUser.name, time: new Date().toLocaleString(), note: "Created"}]
+            servs: [...state.selectedServices], step: startOffice,
+            history: [{step: "Registered", by: state.currentUser.name, time: new Date().toLocaleString(), note: "New Case"}]
         };
         db.ref('reqs/' + id).set(entry).then(() => {
             state.selectedServices = [];
@@ -271,9 +280,9 @@
 
     function viewHistory(id) {
         const r = state.reqs.find(x => x.id === id);
-        document.getElementById('modalUI').innerHTML = `<h3>${r.name} History</h3>` + 
-            r.history.map(h => `<div style="margin-bottom:10px; border-bottom:1px solid #eee; padding:5px;"><b>${h.step}</b><br><small>${h.time} by ${h.by}</small><br><i>${h.note}</i></div>`).join('') +
-            `<button class="btn btn-primary" style="width:100%" onclick="closeModal()">Close</button>`;
+        document.getElementById('modalUI').innerHTML = `<h3>${r.name} Timeline</h3>` + 
+            r.history.map(h => `<div style="border-bottom:1px solid #eee; padding:10px;"><b>${h.step}</b><br><small>${h.time}</small><br><i>${h.note}</i></div>`).join('') +
+            `<button class="btn btn-primary" style="width:100%; margin-top:10px;" onclick="closeModal()">Close</button>`;
         document.getElementById('appModal').style.display = 'flex';
     }
 

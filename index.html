@@ -12,7 +12,6 @@
             --warning: #f39c12; --border: #e1e8ed; --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
         }
         body { font-family: 'Inter', sans-serif; margin: 0; display: flex; background: var(--bg); height: 100vh; overflow: hidden; }
-        
         .sidebar { width: 260px; background: var(--sidebar); color: white; display: flex; flex-direction: column; flex-shrink: 0; transition: 0.3s; position: relative; }
         .sidebar.collapsed { width: 70px; }
         .sidebar.collapsed .sidebar-brand, .sidebar.collapsed .nav-text { display: none; }
@@ -24,7 +23,6 @@
         .main { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
         .header { height: 75px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 30px; }
         .content { padding: 30px; overflow-y: auto; flex-grow: 1; }
-
         .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
         .stat-card { background: white; padding: 20px; border-radius: 12px; box-shadow: var(--shadow); border-top: 4px solid var(--accent); }
         .stat-val { font-size: 24px; font-weight: 800; }
@@ -36,27 +34,18 @@
         .btn-primary { background: var(--accent); color: white; }
         .badge { background: #eee; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
         input, select, textarea { padding: 12px; border: 1px solid #ddd; border-radius: 6px; width: 100%; margin-top: 8px; box-sizing: border-box; font-family: inherit; }
-        
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9999; align-items: center; justify-content: center; }
         .modal-content { background: white; padding: 30px; border-radius: 15px; width: 600px; max-height: 90vh; overflow-y: auto; }
         .pane-box { flex: 1; border: 1px solid #ddd; border-radius: 6px; height: 180px; overflow-y: auto; background: white; }
         .pane-item { padding: 10px; border-bottom: 1px solid #f1f1f1; cursor: pointer; display: flex; justify-content: space-between; font-size: 13px; }
-        
         .row-complete { background-color: #e8f5e9 !important; border-left: 5px solid var(--success); }
         .row-locked { opacity: 0.6; pointer-events: none; background-color: #fcfcfc; }
         .time-tag { font-size: 10px; color: #95a5a6; display: block; margin-top: 2px; }
-
-        @media print {
-            body * { visibility: hidden; }
-            #printArea, #printArea * { visibility: visible; }
-            #printArea { position: absolute; left: 0; top: 0; width: 100%; padding: 40px; }
-        }
+        @media print { body * { visibility: hidden; } #printArea, #printArea * { visibility: visible; } #printArea { position: absolute; left: 0; top: 0; width: 100%; padding: 40px; } }
     </style>
 </head>
 <body onload="checkSession()">
-
     <div id="printArea" style="display:none;"></div>
-
     <div id="loginScreen" style="position:fixed; inset:0; background:var(--sidebar); display:flex; align-items:center; justify-content:center; z-index:10000;">
         <div style="background: white; padding: 45px; border-radius: 20px; width: 350px; text-align: center;">
             <h2 style="color: var(--primary);">HU Registrar</h2>
@@ -100,7 +89,7 @@
                 <div class="card">
                     <input type="text" id="searchTerm" placeholder="Search students..." oninput="render()" style="margin-bottom:15px;">
                     <table>
-                        <thead><tr><th>Student Name</th><th>Services</th><th>Current Step</th><th>Allocation</th><th>Actions</th></tr></thead>
+                        <thead><tr><th>Student Name</th><th>Details</th><th>Step</th><th>Allocation</th><th>Actions</th></tr></thead>
                         <tbody id="dashTable"></tbody>
                     </table>
                 </div>
@@ -155,14 +144,22 @@
     let reqs = JSON.parse(localStorage.getItem('hu_reqs')) || [];
     let currentUser = null, tmpS = [], tmpR = [];
 
+    function timeAgo(date) {
+        const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+        if (seconds < 60) return "Just now";
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return minutes + "m ago";
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return hours + "h ago";
+        return Math.floor(hours / 24) + "d ago";
+    }
+
     function doLogin() {
         const u = document.getElementById('lUser').value, p = document.getElementById('lPass').value;
         const found = users.find(x => x.login === u && x.pass === p);
         if(found && found.isActive) {
-            currentUser = found;
-            sessionStorage.setItem('activeUser', JSON.stringify(found));
-            document.getElementById('loginScreen').style.display='none';
-            render();
+            currentUser = found; sessionStorage.setItem('activeUser', JSON.stringify(found));
+            document.getElementById('loginScreen').style.display='none'; render();
         } else alert("Denied");
     }
 
@@ -176,11 +173,10 @@
     function render() {
         if(!currentUser) return;
         const term = document.getElementById('searchTerm').value.toUpperCase();
-        
         document.getElementById('stTotal').innerText = reqs.length;
         document.getElementById('stProgress').innerText = reqs.filter(r => r.step !== 'COMPLETE').length;
         document.getElementById('stDone').innerText = reqs.filter(r => r.step === 'COMPLETE').length;
-        document.getElementById('stStaff').innerText = users.length;
+        document.getElementById('stStaff').innerText = users.filter(u=>u.isActive).length;
         document.getElementById('userBadge').innerText = currentUser.name;
         document.getElementById('nav-u').style.display = currentUser.userRoles.includes("Admin") ? "flex" : "none";
         document.getElementById('nav-s').style.display = currentUser.userRoles.includes("Admin") ? "flex" : "none";
@@ -188,26 +184,26 @@
         document.getElementById('dashTable').innerHTML = reqs.filter(r => r.name.includes(term)).map((r, i) => {
             const isDone = r.step === 'COMPLETE';
             const isLocked = !currentUser.userRoles.includes("Admin") && !currentUser.userRoles.includes(r.step) && !isDone;
+            const lastUpdate = r.history[r.history.length-1].time;
             return `<tr class="${isDone ? 'row-complete' : ''} ${isLocked ? 'row-locked' : ''}">
-                <td><b onclick="openHist(${i})" style="cursor:pointer; color:var(--accent);">${r.name}</b></td>
-                <td>${r.servs.join(", ")} <i class="fas fa-edit" onclick="editServs(${i})" style="cursor:pointer; font-size:10px; color:#aaa;"></i></td>
+                <td><b onclick="openHist(${i})" style="cursor:pointer; color:var(--accent);">${r.name}</b><br><span class="time-tag">${timeAgo(lastUpdate)}</span></td>
+                <td>${r.servs.join(", ")} <i class="fas fa-edit" onclick="editServs(${i})" style="cursor:pointer; font-size:11px; color:#aaa;"></i></td>
                 <td><span class="badge">${r.step}</span></td>
+                <td><select id="nr-${i}">${config.roles.map(x=>`<option ${r.step===x?'selected':''}>${x}</option>`).join('')}<option value="COMPLETE" ${isDone?'selected':''}>COMPLETE</option></select></td>
                 <td>
-                    <div style="display:flex; gap:5px;">
-                        <select id="nr-${i}">${config.roles.map(x=>`<option ${r.step===x?'selected':''}>${x}</option>`).join('')}<option value="COMPLETE" ${isDone?'selected':''}>COMPLETE</option></select>
-                        <select id="nrm-${i}">${config.rooms.map(x=>`<option ${r.room===x?'selected':''}>${x}</option>`).join('')}</select>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        ${!isDone ? `<button class="btn btn-primary" style="padding:5px 10px;" onclick="forward(${i})">Send</button>` : '✓'}
+                        <i class="fas fa-print" onclick="printSlip(${i})" style="cursor:pointer; color:#7f8c8d;"></i>
+                        ${currentUser.userRoles.includes("Admin") ? `<i class="fas fa-trash" onclick="delReq(${i})" style="color:red; cursor:pointer;"></i>` : ''}
                     </div>
                 </td>
-                <td>${!isDone ? `<button class="btn btn-primary" onclick="forward(${i})">Send</button>` : '✓'}</td>
             </tr>`;
         }).join('');
 
         document.getElementById('staffTable').innerHTML = users.map((u, i) => `<tr><td>${u.name}</td><td>${u.userRoles.join(", ")}</td><td>${u.isActive}</td><td><button onclick="toggleUser(${i})">Toggle</button></td></tr>`).join('');
-        
         document.getElementById('listS').innerHTML = config.services.map(x => `<div>${x}</div>`).join('');
         document.getElementById('listR').innerHTML = config.roles.map(x => `<div>${x}</div>`).join('');
         document.getElementById('listRm').innerHTML = config.rooms.map(x => `<div>${x}</div>`).join('');
-
         renderPanes();
     }
 
@@ -220,30 +216,36 @@
 
     function editServs(i) {
         tmpS = [...reqs[i].servs];
-        document.getElementById('modalTitle').innerText = "Edit Services";
+        document.getElementById('modalTitle').innerText = "Update Services";
         document.getElementById('modalBody').innerHTML = `<div style="display:flex; gap:10px;"><div class="pane-box" id="eAvail"></div><div class="pane-box" id="eSel"></div></div>`;
         const up = () => {
             document.getElementById('eAvail').innerHTML = config.services.filter(x => !tmpS.includes(x)).map(x => `<div class="pane-item" onclick="tmpS.push('${x}'); up();">${x} +</div>`).join('');
             document.getElementById('eSel').innerHTML = tmpS.map(x => `<div class="pane-item" onclick="tmpS=tmpS.filter(v=>v!=='${x}'); up();">${x} x</div>`).join('');
         };
         up();
-        document.getElementById('modalFooter').innerHTML = `<button class="btn btn-primary" onclick="reqs[${i}].servs=[...tmpS]; saveAll(); closeModal(); render();">Save</button>`;
+        document.getElementById('modalFooter').innerHTML = `<button class="btn btn-primary" onclick="reqs[${i}].servs=[...tmpS]; saveAll(); closeModal(); render();">Save Changes</button>`;
         document.getElementById('appModal').style.display='flex';
     }
 
     function forward(i) {
         const nr = document.getElementById(`nr-${i}`).value;
-        const nrm = document.getElementById(`nrm-${i}`).value;
-        reqs[i].step = nr; reqs[i].room = nrm;
-        reqs[i].history.push({step: nr, by: currentUser.name, time: new Date()});
+        const note = prompt("Note:");
+        reqs[i].step = nr;
+        reqs[i].history.push({step: nr, by: currentUser.name, time: new Date(), note: note || "Forwarded"});
         saveAll(); render();
     }
 
     function openHist(i) {
-        document.getElementById('modalTitle').innerText = "Timeline";
-        document.getElementById('modalBody').innerHTML = reqs[i].history.map(h => `<div><b>${h.step}</b> - ${h.by} <br><small>${new Date(h.time).toLocaleString()}</small></div><hr>`).join('');
+        document.getElementById('modalTitle').innerText = "Timeline: " + reqs[i].name;
+        document.getElementById('modalBody').innerHTML = reqs[i].history.map(h => `<div><b>${h.step}</b> - ${h.by} <br><small>${new Date(h.time).toLocaleString()}</small><br><i>${h.note||''}</i></div><hr>`).join('');
         document.getElementById('modalFooter').innerHTML = `<button class="btn" onclick="closeModal()">Close</button>`;
         document.getElementById('appModal').style.display='flex';
+    }
+
+    function printSlip(i) {
+        const r = reqs[i];
+        document.getElementById('printArea').innerHTML = `<div style="border:2px solid #000; padding:20px; text-align:center;"><h2>HU REGISTRAR</h2><p>Student: ${r.name}</p><p>Services: ${r.servs.join(", ")}</p><p>Date: ${new Date().toLocaleDateString()}</p></div>`;
+        window.print();
     }
 
     function saveNewReq() {
@@ -253,12 +255,13 @@
 
     function saveStaff() { users.push({name: document.getElementById('uFull').value, login: document.getElementById('uId').value, pass: document.getElementById('uPw').value, userRoles: [...tmpR], isActive: true}); tmpR = []; saveAll(); render(); }
     function saveAll() { localStorage.setItem('hu_reqs', JSON.stringify(reqs)); localStorage.setItem('hu_users', JSON.stringify(users)); localStorage.setItem('hu_config', JSON.stringify(config)); }
-    function addSet(k, id) { config[k].push(document.getElementById(id).value); saveAll(); render(); }
+    function addSet(k, id) { if(document.getElementById(id).value) { config[k].push(document.getElementById(id).value); saveAll(); render(); document.getElementById(id).value=''; } }
     function toggleUser(i) { users[i].isActive = !users[i].isActive; saveAll(); render(); }
+    function delReq(i) { if(confirm("Delete case?")) { reqs.splice(i,1); saveAll(); render(); } }
     function nav(id, el) { document.querySelectorAll('.section').forEach(s => s.style.display='none'); document.getElementById(id).style.display='block'; document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); el.classList.add('active'); render(); }
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
     function closeModal() { document.getElementById('appModal').style.display='none'; }
-    function exportData() { console.log(JSON.stringify({config, users, reqs})); alert("Check Console"); }
+    function exportData() { console.log(JSON.stringify({config, users, reqs})); alert("Data logged to browser console."); }
 </script>
 </body>
 </html>

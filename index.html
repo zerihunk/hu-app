@@ -42,23 +42,23 @@
         /* Modal & Lists */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9999; align-items: center; justify-content: center; }
         .modal-content { background: white; padding: 30px; border-radius: 15px; width: 600px; max-height: 90vh; overflow-y: auto; }
-        .pane-box { flex: 1; border: 1px solid #ddd; border-radius: 6px; height: 180px; overflow-y: auto; background: white; }
-        .pane-item { padding: 10px; border-bottom: 1px solid #f1f1f1; cursor: pointer; display: flex; justify-content: space-between; font-size: 13px; align-items: center; }
-        .pane-item:hover { background: #f8f9fa; }
+        .pane-box { flex: 1; border: 1px solid #ddd; border-radius: 6px; height: 200px; overflow-y: auto; background: white; }
+        .pane-item { padding: 10px; border-bottom: 1px solid #f1f1f1; cursor: pointer; display: flex; justify-content: space-between; font-size: 13px; }
         
         /* Logic Classes */
         .row-complete { background-color: #e8f5e9 !important; border-left: 5px solid var(--success); }
         .row-locked { opacity: 0.6; pointer-events: none; background-color: #fcfcfc; }
         .time-tag { font-size: 10px; color: #95a5a6; display: block; margin-top: 2px; }
 
+        /* Print Style */
         @media print {
             body * { visibility: hidden; }
             #printArea, #printArea * { visibility: visible; }
-            #printArea { position: absolute; left: 0; top: 0; width: 100%; display: block !important; }
+            #printArea { position: absolute; left: 0; top: 0; width: 100%; padding: 40px; }
         }
     </style>
 </head>
-<body onload="checkSession()">
+<body>
 
     <div id="printArea" style="display:none;"></div>
 
@@ -66,7 +66,7 @@
         <div style="background: white; padding: 45px; border-radius: 20px; width: 350px; text-align: center;">
             <h2 style="color: var(--primary);">HU Registrar</h2>
             <input type="text" id="lUser" placeholder="Login ID" autofocus>
-            <input type="password" id="lPass" placeholder="Password" style="margin: 20px 0;" onkeypress="if(event.key === 'Enter') doLogin()">
+            <input type="password" id="lPass" placeholder="Password" style="margin: 20px 0;">
             <button class="btn btn-primary" style="width:100%; justify-content: center;" onclick="doLogin()">Login</button>
         </div>
     </div>
@@ -86,7 +86,7 @@
         <div class="nav-item" onclick="nav('view-reg', this)"><i class="fas fa-user-plus"></i> <span class="nav-text">New Entry</span></div>
         <div id="nav-u" class="nav-item" style="display:none;" onclick="nav('view-users', this)"><i class="fas fa-users-cog"></i> <span class="nav-text">Staff Manager</span></div>
         <div id="nav-s" class="nav-item" style="display:none;" onclick="nav('view-set', this)"><i class="fas fa-cogs"></i> <span class="nav-text">System Settings</span></div>
-        <div class="nav-item" style="margin-top:auto;" onclick="doLogout()"><i class="fas fa-power-off"></i> <span class="nav-text">Logout</span></div>
+        <div class="nav-item" style="margin-top:auto;" onclick="location.reload()"><i class="fas fa-power-off"></i> <span class="nav-text">Logout</span></div>
     </div>
 
     <div class="main">
@@ -125,8 +125,8 @@
                     </div>
                     <div style="margin-top:15px;"><label style="font-weight:700;">Services Required:</label>
                         <div style="display:flex; gap:15px; margin-top:8px;">
-                            <div style="flex:1;"><small>Available Services</small><div class="pane-box" id="availServ"></div></div>
-                            <div style="flex:1;"><small style="color:var(--success);">Selected Services</small><div class="pane-box" id="selServ" style="background:#f0fdf4;"></div></div>
+                            <div style="flex:1;"><small>Available</small><div class="pane-box" id="availServ"></div></div>
+                            <div style="flex:1;"><small style="color:var(--success);">Selected</small><div class="pane-box" id="selServ" style="background:#f0fdf4;"></div></div>
                         </div>
                     </div>
                     <button class="btn btn-primary" style="width:100%; margin-top:20px; justify-content:center;" onclick="saveNewReq()">Register & Open Case</button>
@@ -153,21 +153,9 @@
 
             <div id="view-set" class="section" style="display:none;">
                 <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:20px;">
-                    <div class="card">
-                        <h4>Services</h4>
-                        <div style="display:flex; gap:5px;"><input id="setS" placeholder="Service Name"><button class="btn btn-primary" onclick="addSet('services','setS')">+</button></div>
-                        <div id="listS" class="pane-box" style="height:250px; margin-top:10px;"></div>
-                    </div>
-                    <div class="card">
-                        <h4>Workflows (Roles)</h4>
-                        <div style="display:flex; gap:5px;"><input id="setR" placeholder="Role Name"><button class="btn btn-primary" onclick="addSet('roles','setR')">+</button></div>
-                        <div id="listR" class="pane-box" style="height:250px; margin-top:10px;"></div>
-                    </div>
-                    <div class="card">
-                        <h4>Offices (Rooms)</h4>
-                        <div style="display:flex; gap:5px;"><input id="setRm" placeholder="Room/Office No"><button class="btn btn-primary" onclick="addSet('rooms','setRm')">+</button></div>
-                        <div id="listRm" class="pane-box" style="height:250px; margin-top:10px;"></div>
-                    </div>
+                    <div class="card"><h4>Services</h4><div style="display:flex; gap:5px;"><input id="setS"><button class="btn btn-primary" onclick="addSet('services','setS')">+</button></div><div id="listS"></div></div>
+                    <div class="card"><h4>Workflows</h4><div style="display:flex; gap:5px;"><input id="setR"><button class="btn btn-primary" onclick="addSet('roles','setR')">+</button></div><div id="listR"></div></div>
+                    <div class="card"><h4>Offices</h4><div style="display:flex; gap:5px;"><input id="setRm"><button class="btn btn-primary" onclick="addSet('rooms','setRm')">+</button></div><div id="listRm"></div></div>
                 </div>
                 <div class="card" style="background:#f8f9fa; border:1px dashed #ccc; text-align:center;">
                     <button class="btn btn-primary" onclick="exportData()"><i class="fas fa-download"></i> Export JSON Backup</button>
@@ -179,54 +167,38 @@
     </div>
 
 <script>
-    // Initial Data & State
-    let config = JSON.parse(localStorage.getItem('hu_config')) || { 
-        services: ["Degree", "Transcript", "Letter", "Certification"], 
-        roles: ["Registrar", "Finance", "Library", "Head Office"], 
-        rooms: ["R-01", "R-02", "R-03", "Main Hall"] 
-    };
-    let users = JSON.parse(localStorage.getItem('hu_users')) || [
-        {name:"System Admin", login:"admin", pass:"admin123", userRoles:["Admin"], office:"HQ", isActive:true}
-    ];
+    let config = JSON.parse(localStorage.getItem('hu_config')) || { services: ["Degree", "Transcript", "Letter"], roles: ["Registrar", "Finance", "Library"], rooms: ["R-01", "R-02", "R-03"] };
+    let users = JSON.parse(localStorage.getItem('hu_users')) || [{name:"Admin", login:"admin", pass:"admin123", userRoles:["Admin"], office:"HQ", isActive:true}];
     let reqs = JSON.parse(localStorage.getItem('hu_reqs')) || [];
     let currentUser = null, tmpS = [], tmpR = [];
 
-    // Session Management
-    function checkSession() {
-        const saved = sessionStorage.getItem('activeUser');
-        if (saved) {
-            currentUser = JSON.parse(saved);
-            document.getElementById('loginScreen').style.display='none';
-            render();
-        }
+    // Utility: Time Ago Calculator
+    function timeAgo(date) {
+        const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+        if (seconds < 60) return "Just now";
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return minutes + "m ago";
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return hours + "h ago";
+        return Math.floor(hours / 24) + "d ago";
     }
 
     function doLogin() {
         const u = document.getElementById('lUser').value, p = document.getElementById('lPass').value;
         const found = users.find(x => x.login === u && x.pass === p);
         if(found && found.isActive) {
-            currentUser = found;
-            sessionStorage.setItem('activeUser', JSON.stringify(found));
-            document.getElementById('loginScreen').style.display='none';
+            currentUser = found; document.getElementById('loginScreen').style.display='none';
+            document.getElementById('nav-u').style.display = found.userRoles.includes("Admin") ? "flex" : "none";
+            document.getElementById('nav-s').style.display = found.userRoles.includes("Admin") ? "flex" : "none";
             render();
-        } else alert("Invalid credentials or account disabled.");
+        } else alert("Access Denied.");
     }
 
-    function doLogout() {
-        sessionStorage.removeItem('activeUser');
-        location.reload();
-    }
-
-    // Core Rendering Engine
     function render() {
         if(!currentUser) return;
         const term = document.getElementById('searchTerm').value.toUpperCase();
         
-        // Dynamic Sidebar Permissions
-        document.getElementById('nav-u').style.display = currentUser.userRoles.includes("Admin") ? "flex" : "none";
-        document.getElementById('nav-s').style.display = currentUser.userRoles.includes("Admin") ? "flex" : "none";
-
-        // Update Stats
+        // Stats
         document.getElementById('stTotal').innerText = reqs.length;
         document.getElementById('stProgress').innerText = reqs.filter(r => r.step !== 'COMPLETE').length;
         document.getElementById('stDone').innerText = reqs.filter(r => r.step === 'COMPLETE').length;
@@ -245,23 +217,18 @@
                         <i class="fas fa-print" style="cursor:pointer; color:#7f8c8d;" onclick="printSlip(${i})"></i>
                         <b style="cursor:pointer; color:var(--accent);" onclick="openHist(${i})">${r.name}</b>
                     </div>
-                    <span class="time-tag">Updated: ${timeAgo(lastUpdate)}</span>
+                    <span class="time-tag">Last active: ${timeAgo(lastUpdate)}</span>
                 </td>
-                <td style="font-size:12px;">${r.dept}<br><span style="color:#3498db">${r.servs.join(", ")}</span></td>
+                <td style="font-size:12px; color:#666;">${r.dept}<br>${r.servs.join(", ")}</td>
                 <td><span class="badge">${r.step}</span></td>
                 <td>
                     <div style="display:flex; gap:5px;">
-                        <select id="nr-${i}" style="padding:4px; font-size:11px;">
-                            ${config.roles.map(x=>`<option ${r.step===x?'selected':''}>${x}</option>`).join('')}
-                            <option value="COMPLETE" ${isDone?'selected':''}>COMPLETE</option>
-                        </select>
-                        <select id="nrm-${i}" style="padding:4px; font-size:11px;">
-                            ${config.rooms.map(x=>`<option ${r.room===x?'selected':''}>${x}</option>`).join('')}
-                        </select>
+                        <select id="nr-${i}" style="padding:4px; font-size:11px;">${config.roles.map(x=>`<option ${r.step===x?'selected':''}>${x}</option>`).join('')}<option value="COMPLETE" ${isDone?'selected':''}>COMPLETE</option></select>
+                        <select id="nrm-${i}" style="padding:4px; font-size:11px;">${config.rooms.map(x=>`<option ${r.room===x?'selected':''}>${x}</option>`).join('')}</select>
                     </div>
                 </td>
                 <td>
-                    ${!isDone ? `<button class="btn btn-primary" style="padding:5px 10px; font-size:11px;" onclick="forward(${i})">Forward</button>` : `<i class="fas fa-check-circle" style="color:var(--success)"></i>`}
+                    ${!isDone ? `<button class="btn btn-primary" style="padding:5px 10px; font-size:11px;" onclick="forward(${i})">Send</button>` : `<i class="fas fa-check-circle" style="color:var(--success)"></i>`}
                     ${currentUser.userRoles.includes("Admin") ? `<i class="fas fa-trash" style="margin-left:10px; color:red; cursor:pointer;" onclick="delReq(${i})"></i>` : ''}
                 </td>
             </tr>`;
@@ -271,30 +238,10 @@
         document.getElementById('staffTable').innerHTML = users.map((u, i) => `<tr>
             <td><b>${u.name}</b><br><small>${u.login}</small></td><td>${u.office}</td><td>${u.userRoles.join(", ")}</td>
             <td><span class="badge" style="background:${u.isActive?'#e8f5e9':'#ffebee'}; color:${u.isActive?'green':'red'}">${u.isActive?'Active':'Disabled'}</span></td>
-            <td><button class="btn" style="padding:4px 8px; font-size:11px;" onclick="toggleUser(${i})">Toggle Status</button> 
-            ${u.login !== 'admin' ? `<i class="fas fa-trash" style="color:red; cursor:pointer; margin-left:10px;" onclick="delUser(${i})"></i>` : ''}</td>
+            <td><button class="btn" onclick="toggleUser(${i})">Status</button> <i class="fas fa-trash" style="color:red; cursor:pointer;" onclick="delUser(${i})"></i></td>
         </tr>`).join('');
 
         renderPanes();
-        renderSettingsLists();
-    }
-
-    // Helper: System Settings List Rendering
-    function renderSettingsLists() {
-        const listS = document.getElementById('listS');
-        if(!listS) return; 
-
-        listS.innerHTML = config.services.map((s, i) => `
-            <div class="pane-item">${s} <i class="fas fa-times" style="color:red" onclick="removeSet('services', ${i})"></i></div>
-        `).join('');
-
-        document.getElementById('listR').innerHTML = config.roles.map((r, i) => `
-            <div class="pane-item">${r} <i class="fas fa-times" style="color:red" onclick="removeSet('roles', ${i})"></i></div>
-        `).join('');
-
-        document.getElementById('listRm').innerHTML = config.rooms.map((rm, i) => `
-            <div class="pane-item">${rm} <i class="fas fa-times" style="color:red" onclick="removeSet('rooms', ${i})"></i></div>
-        `).join('');
     }
 
     function renderPanes() {
@@ -305,15 +252,14 @@
         document.getElementById('selRoles').innerHTML = tmpR.map(x=>`<div class="pane-item" onclick="tmpR=tmpR.filter(v=>v!=='${x}'); renderPanes();">${x} <i class="fas fa-times"></i></div>`).join('');
     }
 
-    // Logic Functions
     function saveNewReq() {
         const n = document.getElementById('inName').value;
-        if(!n || tmpS.length === 0) return alert("Please enter name and select at least one service.");
+        if(!n || tmpS.length === 0) return alert("Missing Info");
         reqs.push({
             name: n.toUpperCase(), dept: document.getElementById('inDept').value,
             deg: document.getElementById('inDeg').value, mod: document.getElementById('inMod').value,
             servs: [...tmpS], step: config.roles[0], room: config.rooms[0],
-            history: [{step: "Registration", rm: "Counter", by: currentUser.name, time: new Date(), note: "Case Opened"}]
+            history: [{step: "Registered", rm: config.rooms[0], by: currentUser.name, time: new Date()}]
         });
         tmpS = []; document.getElementById('inName').value = ''; saveAll(); nav('view-dash', document.querySelector('.nav-item'));
     }
@@ -321,51 +267,33 @@
     function forward(i) {
         const nextRole = document.getElementById(`nr-${i}`).value;
         const nextRoom = document.getElementById(`nrm-${i}`).value;
-        const note = prompt("Add instruction/note (optional):");
+        const note = prompt("Add a brief note (optional):");
         reqs[i].step = nextRole; reqs[i].room = nextRoom;
         reqs[i].history.push({ step: nextRole, rm: nextRoom, by: currentUser.name, time: new Date(), note: note || "Forwarded" });
         saveAll(); render();
-    }
-
-    function saveStaff() {
-        const u = {
-            name: document.getElementById('uFull').value,
-            login: document.getElementById('uId').value,
-            pass: document.getElementById('uPw').value,
-            office: document.getElementById('uRoom').value,
-            userRoles: [...tmpR],
-            isActive: true
-        };
-        if(!u.name || !u.login || !u.pass) return alert("Missing staff details.");
-        users.push(u); tmpR = []; saveAll(); render();
-        document.getElementById('uFull').value = ''; document.getElementById('uId').value = ''; document.getElementById('uPw').value = '';
-    }
-
-    function addSet(key, id) {
-        const val = document.getElementById(id).value.trim();
-        if(val) { config[key].push(val); document.getElementById(id).value = ""; saveAll(); render(); }
-    }
-
-    function removeSet(key, i) {
-        if(confirm("Delete this setting?")) { config[key].splice(i, 1); saveAll(); render(); }
     }
 
     function printSlip(i) {
         const r = reqs[i];
         const area = document.getElementById('printArea');
         area.innerHTML = `
-            <div style="border: 2px solid #000; padding: 30px; font-family: sans-serif; max-width: 600px; margin: auto;">
-                <h2 style="text-align:center; margin-bottom:5px;">HAWASSA UNIVERSITY</h2>
-                <h3 style="text-align:center; margin-top:0;">REGISTRAR SERVICE SLIP</h3>
-                <hr>
-                <p><b>Student:</b> ${r.name}</p>
-                <p><b>Department:</b> ${r.dept} (${r.deg})</p>
-                <p><b>Services:</b> ${r.servs.join(", ")}</p>
-                <p><b>Current Location:</b> ${r.step} - ${r.room}</p>
-                <div style="margin-top: 50px; border-top: 1px dashed #000; padding-top: 10px;">
-                    <small>System Date: ${new Date().toLocaleString()}</small><br>
-                    <small>Ref: HU-${Date.now()}</small>
+            <div style="border: 2px solid #000; padding: 20px; font-family: sans-serif;">
+                <div style="text-align:center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;">
+                    <h2>HAWASSA UNIVERSITY REGISTRAR</h2>
+                    <p>Student Service Tracking Slip</p>
+                    <div style="letter-spacing: 5px; font-weight:bold;">||| ${Date.now()} |||</div>
                 </div>
+                <p><b>Student Name:</b> ${r.name}</p>
+                <p><b>Department:</b> ${r.dept}</p>
+                <p><b>Degree:</b> ${r.deg} (${r.mod})</p>
+                <hr>
+                <p><b>Services Requested:</b></p>
+                <ul>${r.servs.map(s => `<li>${s}</li>`).join('')}</ul>
+                <div style="margin-top: 40px; display: flex; justify-content: space-between;">
+                    <div>____________________<br>Officer Signature</div>
+                    <div>____________________<br>Student Signature</div>
+                </div>
+                <p style="margin-top:20px; font-size:10px; text-align:center;">Printed on: ${new Date().toLocaleString()}</p>
             </div>
         `;
         window.print();
@@ -373,34 +301,27 @@
 
     function openHist(i) {
         const r = reqs[i];
-        document.getElementById('modalTitle').innerText = r.name + " - Case History";
+        document.getElementById('modalTitle').innerText = r.name + " Timeline";
         document.getElementById('modalBody').innerHTML = r.history.map(h => `
-            <div style="margin-bottom:12px; border-left:4px solid var(--accent); padding-left:15px; padding-bottom:5px; border-bottom:1px solid #eee;">
-                <b style="color:var(--primary)">${h.step}</b> <small style="color:#777; float:right;">${new Date(h.time).toLocaleString()}</small><br>
-                <small>Officer: ${h.by} | Office: ${h.rm}</small><br>
-                <p style="margin: 5px 0; font-style: italic; font-size:13px; color:#444;">"${h.note || 'Processed'}"</p>
+            <div style="margin-bottom:15px; border-left:3px solid var(--accent); padding-left:15px;">
+                <b>${h.step}</b> <small style="color:#888;">(${new Date(h.time).toLocaleString()})</small><br>
+                <small>By: ${h.by} | Office: ${h.rm}</small><br>
+                <i style="font-size:12px; color:#555;">"${h.note || 'No note'}"</i>
             </div>
-        `).reverse().join('');
+        `).join('');
         document.getElementById('modalFooter').innerHTML = `<button class="btn btn-primary" onclick="closeModal()">Close</button>`;
         document.getElementById('appModal').style.display='flex';
     }
 
-    // Utilities
-    function timeAgo(date) {
-        const diff = Math.floor((new Date() - new Date(date)) / 1000);
-        if (diff < 60) return "Just now";
-        if (diff < 3600) return Math.floor(diff/60) + "m ago";
-        if (diff < 86400) return Math.floor(diff/3600) + "h ago";
-        return Math.floor(diff/86400) + "d ago";
-    }
     function nav(id, el) { document.querySelectorAll('.section').forEach(s => s.style.display='none'); document.getElementById(id).style.display='block'; document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); el.classList.add('active'); render(); }
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
     function closeModal() { document.getElementById('appModal').style.display='none'; }
+    function addSet(k, id) { const v = document.getElementById(id).value; if(v){ config[k].push(v); document.getElementById(id).value=""; saveAll(); render(); } }
     function toggleUser(i) { users[i].isActive = !users[i].isActive; saveAll(); render(); }
-    function delReq(i) { if(confirm("Delete this case permanently?")) { reqs.splice(i,1); saveAll(); render(); } }
-    function delUser(i) { if(confirm("Delete staff member?")) { users.splice(i,1); saveAll(); render(); } }
+    function delReq(i) { if(confirm("Delete?")) { reqs.splice(i,1); saveAll(); render(); } }
+    function delUser(i) { users.splice(i,1); saveAll(); render(); }
     function saveAll() { localStorage.setItem('hu_config', JSON.stringify(config)); localStorage.setItem('hu_users', JSON.stringify(users)); localStorage.setItem('hu_reqs', JSON.stringify(reqs)); }
-    function exportData() { const blob = new Blob([JSON.stringify({config, users, reqs})], {type:"application/json"}); const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download="HU_Backup_2026.json"; a.click(); }
+    function exportData() { const blob = new Blob([JSON.stringify({config, users, reqs})], {type:"application/json"}); const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download="HU_Backup.json"; a.click(); }
     function importData(e) { const reader = new FileReader(); reader.onload=(ev)=>{ const d=JSON.parse(ev.target.result); config=d.config; users=d.users; reqs=d.reqs; saveAll(); location.reload(); }; reader.readAsText(e.target.files[0]); }
 </script>
 </body>

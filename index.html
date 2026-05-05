@@ -50,7 +50,6 @@
         .row-locked { opacity: 0.6; pointer-events: none; background-color: #fcfcfc; }
         .time-tag { font-size: 10px; color: #95a5a6; display: block; margin-top: 2px; }
 
-        /* Print Style */
         @media print {
             body * { visibility: hidden; }
             #printArea, #printArea * { visibility: visible; }
@@ -58,7 +57,7 @@
         }
     </style>
 </head>
-<body>
+<body onload="checkSession()">
 
     <div id="printArea" style="display:none;"></div>
 
@@ -66,7 +65,7 @@
         <div style="background: white; padding: 45px; border-radius: 20px; width: 350px; text-align: center;">
             <h2 style="color: var(--primary);">HU Registrar</h2>
             <input type="text" id="lUser" placeholder="Login ID" autofocus>
-            <input type="password" id="lPass" placeholder="Password" style="margin: 20px 0;">
+            <input type="password" id="lPass" placeholder="Password" style="margin: 20px 0;" onkeypress="if(event.key === 'Enter') doLogin()">
             <button class="btn btn-primary" style="width:100%; justify-content: center;" onclick="doLogin()">Login</button>
         </div>
     </div>
@@ -86,7 +85,7 @@
         <div class="nav-item" onclick="nav('view-reg', this)"><i class="fas fa-user-plus"></i> <span class="nav-text">New Entry</span></div>
         <div id="nav-u" class="nav-item" style="display:none;" onclick="nav('view-users', this)"><i class="fas fa-users-cog"></i> <span class="nav-text">Staff Manager</span></div>
         <div id="nav-s" class="nav-item" style="display:none;" onclick="nav('view-set', this)"><i class="fas fa-cogs"></i> <span class="nav-text">System Settings</span></div>
-        <div class="nav-item" style="margin-top:auto;" onclick="location.reload()"><i class="fas fa-power-off"></i> <span class="nav-text">Logout</span></div>
+        <div class="nav-item" style="margin-top:auto;" onclick="doLogout()"><i class="fas fa-power-off"></i> <span class="nav-text">Logout</span></div>
     </div>
 
     <div class="main">
@@ -172,7 +171,21 @@
     let reqs = JSON.parse(localStorage.getItem('hu_reqs')) || [];
     let currentUser = null, tmpS = [], tmpR = [];
 
-    // Utility: Time Ago Calculator
+    // Session Management
+    function checkSession() {
+        const savedUser = sessionStorage.getItem('activeUser');
+        if (savedUser) {
+            currentUser = JSON.parse(savedUser);
+            document.getElementById('loginScreen').style.display='none';
+            render();
+        }
+    }
+
+    function doLogout() {
+        sessionStorage.removeItem('activeUser');
+        location.reload();
+    }
+
     function timeAgo(date) {
         const seconds = Math.floor((new Date() - new Date(date)) / 1000);
         if (seconds < 60) return "Just now";
@@ -187,9 +200,9 @@
         const u = document.getElementById('lUser').value, p = document.getElementById('lPass').value;
         const found = users.find(x => x.login === u && x.pass === p);
         if(found && found.isActive) {
-            currentUser = found; document.getElementById('loginScreen').style.display='none';
-            document.getElementById('nav-u').style.display = found.userRoles.includes("Admin") ? "flex" : "none";
-            document.getElementById('nav-s').style.display = found.userRoles.includes("Admin") ? "flex" : "none";
+            currentUser = found;
+            sessionStorage.setItem('activeUser', JSON.stringify(found));
+            document.getElementById('loginScreen').style.display='none';
             render();
         } else alert("Access Denied.");
     }
@@ -198,14 +211,15 @@
         if(!currentUser) return;
         const term = document.getElementById('searchTerm').value.toUpperCase();
         
-        // Stats
+        document.getElementById('nav-u').style.display = currentUser.userRoles.includes("Admin") ? "flex" : "none";
+        document.getElementById('nav-s').style.display = currentUser.userRoles.includes("Admin") ? "flex" : "none";
+
         document.getElementById('stTotal').innerText = reqs.length;
         document.getElementById('stProgress').innerText = reqs.filter(r => r.step !== 'COMPLETE').length;
         document.getElementById('stDone').innerText = reqs.filter(r => r.step === 'COMPLETE').length;
         document.getElementById('stStaff').innerText = users.filter(u=>u.isActive).length;
         document.getElementById('userBadge').innerText = currentUser.name;
 
-        // Dashboard Table
         document.getElementById('dashTable').innerHTML = reqs.filter(r => r.name.includes(term)).map((r, i) => {
             const isDone = r.step === 'COMPLETE';
             const isLocked = !currentUser.userRoles.includes("Admin") && !currentUser.userRoles.includes(r.step) && !isDone;
@@ -217,9 +231,12 @@
                         <i class="fas fa-print" style="cursor:pointer; color:#7f8c8d;" onclick="printSlip(${i})"></i>
                         <b style="cursor:pointer; color:var(--accent);" onclick="openHist(${i})">${r.name}</b>
                     </div>
-                    <span class="time-tag">Last active: ${timeAgo(lastUpdate)}</span>
+                    <span class="time-tag">${timeAgo(lastUpdate)}</span>
                 </td>
-                <td style="font-size:12px; color:#666;">${r.dept}<br>${r.servs.join(", ")}</td>
+                <td style="font-size:12px; color:#666;">
+                    ${r.dept} <i class="fas fa-pen" style="font-size:9px; cursor:pointer;" onclick="editDetails(${i})"></i><br>
+                    <span style="color:var(--accent)">${r.servs.join(", ")}</span>
+                </td>
                 <td><span class="badge">${r.step}</span></td>
                 <td>
                     <div style="display:flex; gap:5px;">
@@ -234,7 +251,6 @@
             </tr>`;
         }).join('');
 
-        // Staff Table
         document.getElementById('staffTable').innerHTML = users.map((u, i) => `<tr>
             <td><b>${u.name}</b><br><small>${u.login}</small></td><td>${u.office}</td><td>${u.userRoles.join(", ")}</td>
             <td><span class="badge" style="background:${u.isActive?'#e8f5e9':'#ffebee'}; color:${u.isActive?'green':'red'}">${u.isActive?'Active':'Disabled'}</span></td>
@@ -242,6 +258,17 @@
         </tr>`).join('');
 
         renderPanes();
+    }
+
+    // Modal logic for simple field editing
+    function editDetails(i) {
+        const r = reqs[i];
+        const newDept = prompt("Update Department:", r.dept);
+        if (newDept !== null) {
+            reqs[i].dept = newDept;
+            saveAll();
+            render();
+        }
     }
 
     function renderPanes() {
@@ -305,7 +332,7 @@
         document.getElementById('modalBody').innerHTML = r.history.map(h => `
             <div style="margin-bottom:15px; border-left:3px solid var(--accent); padding-left:15px;">
                 <b>${h.step}</b> <small style="color:#888;">(${new Date(h.time).toLocaleString()})</small><br>
-                <small>By: ${h.by} | Office: ${h.rm}</small><br>
+                <small>By: ${h.by} | Office: ${h.rm || 'N/A'}</small><br>
                 <i style="font-size:12px; color:#555;">"${h.note || 'No note'}"</i>
             </div>
         `).join('');
@@ -323,6 +350,22 @@
     function saveAll() { localStorage.setItem('hu_config', JSON.stringify(config)); localStorage.setItem('hu_users', JSON.stringify(users)); localStorage.setItem('hu_reqs', JSON.stringify(reqs)); }
     function exportData() { const blob = new Blob([JSON.stringify({config, users, reqs})], {type:"application/json"}); const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download="HU_Backup.json"; a.click(); }
     function importData(e) { const reader = new FileReader(); reader.onload=(ev)=>{ const d=JSON.parse(ev.target.result); config=d.config; users=d.users; reqs=d.reqs; saveAll(); location.reload(); }; reader.readAsText(e.target.files[0]); }
+    
+    function saveStaff() {
+        const u = {
+            name: document.getElementById('uFull').value,
+            login: document.getElementById('uId').value,
+            pass: document.getElementById('uPw').value,
+            office: document.getElementById('uRoom').value,
+            userRoles: [...tmpR],
+            isActive: true
+        };
+        if(!u.name || !u.login) return alert("Invalid Staff Info");
+        users.push(u);
+        tmpR = [];
+        saveAll();
+        render();
+    }
 </script>
 </body>
 </html>

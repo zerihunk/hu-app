@@ -85,7 +85,7 @@
                 <div class="card">
                     <input type="text" id="searchTerm" placeholder="Search..." oninput="render()" style="margin-top: 0; margin-bottom: 20px;">
                     <table>
-                        <thead><tr><th>Student Name</th><th>Details</th><th>Services (Click to remove)</th><th>Current Office</th><th>Allocation</th><th>Action</th></tr></thead>
+                        <thead><tr><th>Student Name</th><th>Details</th><th>Services</th><th>Office Status</th><th>Allocation</th><th>Action</th></tr></thead>
                         <tbody id="dashTable"></tbody>
                     </table>
                 </div>
@@ -115,7 +115,7 @@
 
             <div id="view-users" class="section" style="display:none;">
                 <div class="card">
-                    <h3>Users</h3>
+                    <h3>Staff Management</h3>
                     <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:10px;">
                         <input type="text" id="uName" placeholder="Name"><input type="text" id="uId" placeholder="ID"><input type="password" id="uPw" placeholder="PW"><button class="btn btn-primary" onclick="addUser()">Add</button>
                     </div>
@@ -125,8 +125,16 @@
 
             <div id="view-set" class="section" style="display:none;">
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-                    <div class="card"><h4>Services</h4><div style="display:flex; gap:5px;"><input id="setS"><button class="btn btn-primary" onclick="addSet('services','setS')">+</button></div><div id="listS"></div></div>
-                    <div class="card"><h4>Offices</h4><div style="display:flex; gap:5px;"><input id="setR"><button class="btn btn-primary" onclick="addSet('roles','setR')">+</button></div><div id="listR"></div></div>
+                    <div class="card">
+                        <h4>Manage Services</h4>
+                        <div style="display:flex; gap:5px;"><input id="setS" placeholder="Service Name"><button class="btn btn-primary" onclick="addSet('services','setS')">+</button></div>
+                        <div id="listS" style="margin-top:15px; border-top:1px solid #eee; padding-top:10px;"></div>
+                    </div>
+                    <div class="card">
+                        <h4>Manage Offices (Allocation)</h4>
+                        <div style="display:flex; gap:5px;"><input id="setR" placeholder="Office Name"><button class="btn btn-primary" onclick="addSet('roles','setR')">+</button></div>
+                        <div id="listR" style="margin-top:15px; border-top:1px solid #eee; padding-top:10px;"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -195,14 +203,16 @@
             </tr>
         `).join('');
 
-        document.getElementById('availS').innerHTML = state.config.services.filter(s => !state.selectedServices.includes(s)).map(s => `
+        document.getElementById('availS').innerHTML = (state.config.services || []).filter(s => !state.selectedServices.includes(s)).map(s => `
             <div class="pane-item" onclick="toggleServ('${s}', true)">${s} <i class="fas fa-plus"></i></div>
         `).join('');
         document.getElementById('selS').innerHTML = state.selectedServices.map(s => `
             <div class="pane-item" onclick="toggleServ('${s}', false)">${s} <i class="fas fa-minus" style="color:red"></i></div>
         `).join('');
 
-        const listUI = (id, arr, key) => { document.getElementById(id).innerHTML = arr.map((x, i) => `<div style="display:flex; justify-content:space-between; margin-bottom:5px;">${x} <i class="fas fa-trash" onclick="remSet('${key}',${i})" style="color:red; cursor:pointer;"></i></div>`).join(''); };
+        const listUI = (id, arr, key) => { 
+            document.getElementById(id).innerHTML = (arr || []).map((x, i) => `<div style="display:flex; justify-content:space-between; margin-bottom:5px; background:#f9f9f9; padding:5px; border-radius:4px;">${x} <i class="fas fa-trash" onclick="remSet('${key}',${i})" style="color:red; cursor:pointer;"></i></div>`).join(''); 
+        };
         listUI('listS', state.config.services, 'services');
         listUI('listR', state.config.roles, 'roles');
         
@@ -227,13 +237,12 @@
 
     function forward(id) {
         const next = document.getElementById('sel-'+id).value;
-        const note = prompt("Forwarding Note (Required):");
-        if(!note) return alert("Note is required to forward!");
-        
+        const note = prompt("Note for history:");
+        if(note === null) return;
         const r = state.reqs.find(x => x.id === id);
         r.step = next;
-        r.history.push({step: next, by: state.currentUser.name, time: new Date().toLocaleString(), note: note});
-        db.ref('reqs/'+id).set(r).then(() => alert("Successfully forwarded!"));
+        r.history.push({step: next, by: state.currentUser.name, time: new Date().toLocaleString(), note: note || "Forwarded"});
+        db.ref('reqs/'+id).set(r);
     }
 
     function saveEntry() {
@@ -257,7 +266,7 @@
     function viewHistory(id) {
         const r = state.reqs.find(x => x.id === id);
         document.getElementById('modalUI').innerHTML = `
-            <h3>${r.name} - History</h3>
+            <h3>History: ${r.name}</h3>
             <div style="max-height:350px; overflow-y:auto;">
                 ${r.history.map(h => `<div style="border-left:2px solid var(--accent); padding:10px; margin-bottom:10px; background:#f9f9f9;">
                     <b>${h.step}</b> <small>${h.time}</small><br>
@@ -278,7 +287,15 @@
     }
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
     function closeModal() { document.getElementById('appModal').style.display = 'none'; }
-    function addSet(k, id) { const v = document.getElementById(id).value; if(v){ state.config[k].push(v); db.ref('config').set(state.config); document.getElementById(id).value=''; } }
+    function addSet(k, id) { 
+        const v = document.getElementById(id).value; 
+        if(v){ 
+            if(!state.config[k]) state.config[k] = [];
+            state.config[k].push(v); 
+            db.ref('config').set(state.config); 
+            document.getElementById(id).value=''; 
+        } 
+    }
     function remSet(k, i) { state.config[k].splice(i, 1); db.ref('config').set(state.config); }
     function addUser() {
         const id = document.getElementById('uId').value;

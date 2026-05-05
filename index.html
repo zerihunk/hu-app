@@ -46,7 +46,7 @@
 
     <div id="loginScreen" style="position:fixed; inset:0; background:var(--sidebar); display:flex; align-items:center; justify-content:center; z-index:10000;">
         <div style="background: white; padding: 40px; border-radius: 15px; width: 320px; text-align: center;">
-            <h2>HU Registrar</h2>
+            <h2 style="color:var(--primary)">HU Registrar</h2>
             <input type="text" id="lUser" placeholder="Login ID">
             <input type="password" id="lPass" placeholder="Password" style="margin:15px 0;">
             <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="doLogin()">Login</button>
@@ -64,16 +64,45 @@
     </div>
 
     <div class="main">
-        <div class="header"><h2 id="pageTitle">Dashboard</h2><div id="userBadge"></div></div>
+        <div class="header"><h2 id="pageTitle">Dashboard</h2><div id="userBadge" style="font-weight: bold; color: var(--accent);"></div></div>
         <div class="content">
             
             <div id="view-dash" class="section">
                 <div class="card">
-                    <input type="text" id="searchTerm" placeholder="Search..." oninput="render()">
+                    <input type="text" id="searchTerm" placeholder="Search by Student Name or ID..." oninput="render()">
                     <table style="margin-top:20px;">
-                        <thead><tr><th>Name</th><th>Dept</th><th>Status</th><th>Action</th></tr></thead>
+                        <thead><tr><th>Student Name</th><th>Student ID</th><th>Department</th><th>Service</th><th>Action</th></tr></thead>
                         <tbody id="dashTable"></tbody>
                     </table>
+                </div>
+            </div>
+
+            <div id="view-reg" class="section" style="display:none;">
+                <div class="card">
+                    <h3>New Student Registration</h3>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+                        <div>
+                            <label>Full Name</label>
+                            <input type="text" id="regName" placeholder="Enter student name">
+                        </div>
+                        <div>
+                            <label>Student ID</label>
+                            <input type="text" id="regId" placeholder="Enter student ID">
+                        </div>
+                        <div>
+                            <label>Department</label>
+                            <input type="text" id="regDept" placeholder="Enter department">
+                        </div>
+                        <div>
+                            <label>Service Needed</label>
+                            <select id="regService">
+                                <option value="">Select Service</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn btn-success" style="margin-top:20px;" onclick="saveRegistration()">
+                        <i class="fas fa-save"></i> Register Student
+                    </button>
                 </div>
             </div>
 
@@ -146,16 +175,66 @@
         const isAdmin = user.userRoles.includes("Admin");
         document.getElementById('nav-u').style.display = isAdmin ? "flex" : "none";
         document.getElementById('nav-s').style.display = isAdmin ? "flex" : "none";
-        db.ref('config').on('value', s => { if(s.val()) config = s.val(); render(); });
+        
+        db.ref('config').on('value', s => { config = s.val() || {services:[], roles:[], rooms:[]}; updateDropdowns(); render(); });
         db.ref('users').on('value', s => { users = s.val() ? Object.values(s.val()) : []; render(); });
         db.ref('reqs').on('value', s => { reqs = s.val() ? Object.values(s.val()) : []; render(); });
+    }
+
+    function updateDropdowns() {
+        const sel = document.getElementById('regService');
+        sel.innerHTML = '<option value="">Select Service</option>' + 
+            (config.services || []).map(s => `<option value="${s}">${s}</option>`).join('');
+    }
+
+    function saveRegistration() {
+        const name = document.getElementById('regName').value;
+        const sid = document.getElementById('regId').value;
+        const dept = document.getElementById('regDept').value;
+        const serv = document.getElementById('regService').value;
+
+        if(!name || !sid) return alert("Please fill Name and ID");
+
+        const newKey = db.ref('reqs').push().key;
+        db.ref('reqs/' + newKey).set({
+            id: newKey,
+            studentName: name,
+            studentId: sid,
+            dept: dept,
+            service: serv,
+            status: 'Pending',
+            timestamp: Date.now()
+        }).then(() => {
+            alert("Registered Successfully!");
+            document.getElementById('regName').value = '';
+            document.getElementById('regId').value = '';
+            document.getElementById('regDept').value = '';
+            nav('view-dash', document.querySelector('.nav-item'));
+        });
     }
 
     function render() {
         if(!currentUser) return;
         document.getElementById('userBadge').innerText = currentUser.name;
+        const term = document.getElementById('searchTerm').value.toLowerCase();
 
-        // STAFF TABLE - Password Toggle & Active Logic
+        // Dashboard Table
+        const filteredReqs = reqs.filter(r => 
+            (r.studentName || "").toLowerCase().includes(term) || 
+            (r.studentId || "").toLowerCase().includes(term)
+        );
+
+        document.getElementById('dashTable').innerHTML = filteredReqs.map(r => `
+            <tr>
+                <td><b>${r.studentName}</b></td>
+                <td>${r.studentId}</td>
+                <td>${r.dept}</td>
+                <td>${r.service}</td>
+                <td><i class="fas fa-trash" style="color:red; cursor:pointer;" onclick="delReq('${r.id}')"></i></td>
+            </tr>
+        `).join('');
+
+        // Staff Table
         document.getElementById('staffTable').innerHTML = users.map(u => `
             <tr>
                 <td><b>${u.name}</b></td>
@@ -174,17 +253,17 @@
             </tr>
         `).join('');
 
-        // ROLES PANE logic
         document.getElementById('uAvailR').innerHTML = (config.roles||[]).filter(x => !tmpR.includes(x)).map(x => `<div class="pane-item" onclick="tmpR.push('${x}'); render();">${x} <i class="fas fa-plus-circle"></i></div>`).join('');
         document.getElementById('uSelR').innerHTML = tmpR.map(x => `<div class="pane-item" onclick="tmpR=tmpR.filter(v=>v!=='${x}'); render();">${x} <i class="fas fa-minus-circle"></i></div>`).join('');
 
-        // Settings Lists
         const dL = (id, arr, k) => { document.getElementById(id).innerHTML = (arr||[]).map((x, i) => `<div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #eee;">${x} <i class="fas fa-times" style="color:red; cursor:pointer;" onclick="remSet('${k}',${i})"></i></div>`).join(''); }
         dL('listS', config.services, 'services'); dL('listR', config.roles, 'roles'); dL('listRm', config.rooms, 'rooms');
     }
 
     function togglePw(id) { showPw[id] = !showPw[id]; render(); }
     function toggleStatus(id, current) { db.ref('users/'+id).update({ isActive: !current }); }
+    function delReq(id) { if(confirm("Delete record?")) db.ref('reqs/'+id).remove(); }
+    function delUser(id) { if(confirm("Delete staff?")) db.ref('users/'+id).remove(); }
     function saveStaff() {
         const id = document.getElementById('uId').value;
         if(!id) return alert("ID required");
@@ -193,8 +272,13 @@
     }
     function addSet(k, id) { const v = document.getElementById(id).value; if(v){ config[k] = config[k] || []; config[k].push(v); db.ref('config').set(config); document.getElementById(id).value=''; } }
     function remSet(k, i) { config[k].splice(i, 1); db.ref('config').set(config); }
-    function delUser(id) { if(confirm("Delete staff?")) db.ref('users/'+id).remove(); }
-    function nav(id, el) { document.querySelectorAll('.section').forEach(s => s.style.display='none'); document.getElementById(id).style.display='block'; document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); el.classList.add('active'); }
+    function nav(id, el) { 
+        document.querySelectorAll('.section').forEach(s => s.style.display='none'); 
+        document.getElementById(id).style.display='block'; 
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); 
+        el.classList.add('active');
+        document.getElementById('pageTitle').innerText = el.innerText.trim();
+    }
 </script>
 </body>
 </html>

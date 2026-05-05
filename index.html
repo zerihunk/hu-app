@@ -35,12 +35,12 @@
         .btn { padding: 10px 18px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-family: inherit; }
         .btn-primary { background: var(--accent); color: white; }
         .badge { background: #eee; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
-        input, select { padding: 12px; border: 1px solid #ddd; border-radius: 6px; width: 100%; margin-top: 8px; box-sizing: border-box; }
+        input, select, textarea { padding: 12px; border: 1px solid #ddd; border-radius: 6px; width: 100%; margin-top: 8px; box-sizing: border-box; font-family: inherit; }
         
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9999; align-items: center; justify-content: center; }
         .modal-content { background: white; padding: 30px; border-radius: 15px; width: 600px; max-height: 90vh; overflow-y: auto; }
         .pane-box { flex: 1; border: 1px solid #ddd; border-radius: 6px; height: 180px; overflow-y: auto; background: white; }
-        .pane-item { padding: 8px; border-bottom: 1px solid #f1f1f1; cursor: pointer; display: flex; justify-content: space-between; font-size: 13px; }
+        .pane-item { padding: 10px; border-bottom: 1px solid #f1f1f1; cursor: pointer; display: flex; justify-content: space-between; font-size: 13px; }
         
         .row-complete { background-color: #e8f5e9 !important; border-left: 5px solid var(--success); }
         .row-locked { opacity: 0.6; pointer-events: none; background-color: #fcfcfc; }
@@ -98,9 +98,9 @@
                     <div class="stat-card" style="border-color: var(--danger);"><div>Active Staff</div><div class="stat-val" id="stStaff">0</div></div>
                 </div>
                 <div class="card">
-                    <input type="text" id="searchTerm" placeholder="Search students..." oninput="render()" style="margin-bottom: 15px;">
+                    <input type="text" id="searchTerm" placeholder="Search students..." oninput="render()" style="margin-bottom:15px;">
                     <table>
-                        <thead><tr><th>Student Name</th><th>Case Details</th><th>Step</th><th>Move To</th><th>Actions</th></tr></thead>
+                        <thead><tr><th>Student Name</th><th>Services</th><th>Current Step</th><th>Allocation</th><th>Actions</th></tr></thead>
                         <tbody id="dashTable"></tbody>
                     </table>
                 </div>
@@ -110,66 +110,69 @@
                 <div class="card" style="max-width: 800px; margin: 0 auto;">
                     <h3>Registration</h3>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                        <input type="text" id="inName" placeholder="NAME" style="text-transform: uppercase;">
+                        <input type="text" id="inName" placeholder="STUDENT NAME" style="text-transform: uppercase;">
                         <input type="text" id="inDept" placeholder="Department">
                     </div>
                     <div style="margin-top:15px;">
-                        <label>Select Services:</label>
-                        <div style="display:flex; gap:10px; margin-top:5px;">
+                        <div style="display:flex; gap:10px;">
                             <div class="pane-box" id="availServ"></div>
                             <div class="pane-box" id="selServ" style="background:#f0fdf4;"></div>
                         </div>
                     </div>
-                    <button class="btn btn-primary" style="width:100%; margin-top:20px; justify-content:center;" onclick="saveNewReq()">Register Student</button>
+                    <button class="btn btn-primary" style="width:100%; margin-top:20px; justify-content:center;" onclick="saveNewReq()">Register</button>
                 </div>
             </div>
 
-            <div id="view-set" class="section" style="display:none;">
-                <div class="card">
-                    <h4>System Backup</h4>
-                    <button class="btn btn-primary" onclick="exportData()">Export Data</button>
-                </div>
-            </div>
-            
             <div id="view-users" class="section" style="display:none;">
-                <div class="card"><h4>Staff Management is available for Admin</h4></div>
+                <div class="card">
+                    <h3>Staff Control</h3>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+                        <input type="text" id="uFull" placeholder="Full Name"><input type="text" id="uId" placeholder="Login ID"><input type="password" id="uPw" placeholder="Password">
+                    </div>
+                    <div style="margin-top:15px; display:flex; gap:10px;">
+                        <div class="pane-box" id="availRoles"></div>
+                        <div class="pane-box" id="selRoles" style="background:#eff6ff;"></div>
+                    </div>
+                    <button class="btn btn-primary" style="margin-top:15px;" onclick="saveStaff()">Create Staff</button>
+                </div>
+                <div class="card"><table><thead><tr><th>Name</th><th>Roles</th><th>Status</th><th>Actions</th></tr></thead><tbody id="staffTable"></tbody></table></div>
+            </div>
+
+            <div id="view-set" class="section" style="display:none;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:20px;">
+                    <div class="card"><h4>Services</h4><div style="display:flex; gap:5px;"><input id="setS"><button class="btn btn-primary" onclick="addSet('services','setS')">+</button></div><div id="listS"></div></div>
+                    <div class="card"><h4>Workflows</h4><div style="display:flex; gap:5px;"><input id="setR"><button class="btn btn-primary" onclick="addSet('roles','setR')">+</button></div><div id="listR"></div></div>
+                    <div class="card"><h4>Offices</h4><div style="display:flex; gap:5px;"><input id="setRm"><button class="btn btn-primary" onclick="addSet('rooms','setRm')">+</button></div><div id="listRm"></div></div>
+                </div>
+                <button class="btn btn-primary" style="margin-top:20px;" onclick="exportData()">Export Backup</button>
             </div>
         </div>
     </div>
 
 <script>
-    let config = JSON.parse(localStorage.getItem('hu_config')) || { services: ["Degree", "Transcript", "Letter", "ID Card"], roles: ["Registrar", "Finance", "Library", "Department"], rooms: ["Office-01", "Office-02", "Office-03"] };
+    let config = JSON.parse(localStorage.getItem('hu_config')) || { services: ["Degree", "Transcript", "Letter"], roles: ["Registrar", "Finance", "Library"], rooms: ["R-01", "R-02", "R-03"] };
     let users = JSON.parse(localStorage.getItem('hu_users')) || [{name:"Admin", login:"admin", pass:"admin123", userRoles:["Admin"], office:"HQ", isActive:true}];
     let reqs = JSON.parse(localStorage.getItem('hu_reqs')) || [];
-    let currentUser = null, tmpS = [];
+    let currentUser = null, tmpS = [], tmpR = [];
 
-    // --- Authentication & Session ---
     function doLogin() {
         const u = document.getElementById('lUser').value, p = document.getElementById('lPass').value;
         const found = users.find(x => x.login === u && x.pass === p);
         if(found && found.isActive) {
             currentUser = found;
-            sessionStorage.setItem('activeUser', JSON.stringify(found)); // Store session
+            sessionStorage.setItem('activeUser', JSON.stringify(found));
             document.getElementById('loginScreen').style.display='none';
             render();
-        } else alert("Invalid credentials!");
+        } else alert("Denied");
     }
 
     function checkSession() {
         const saved = sessionStorage.getItem('activeUser');
-        if(saved) {
-            currentUser = JSON.parse(saved);
-            document.getElementById('loginScreen').style.display='none';
-            render();
-        }
+        if(saved) { currentUser = JSON.parse(saved); document.getElementById('loginScreen').style.display='none'; render(); }
     }
 
-    function doLogout() {
-        sessionStorage.clear();
-        location.reload();
-    }
+    function doLogout() { sessionStorage.clear(); location.reload(); }
 
-    // --- Core Logic ---
     function render() {
         if(!currentUser) return;
         const term = document.getElementById('searchTerm').value.toUpperCase();
@@ -177,6 +180,7 @@
         document.getElementById('stTotal').innerText = reqs.length;
         document.getElementById('stProgress').innerText = reqs.filter(r => r.step !== 'COMPLETE').length;
         document.getElementById('stDone').innerText = reqs.filter(r => r.step === 'COMPLETE').length;
+        document.getElementById('stStaff').innerText = users.length;
         document.getElementById('userBadge').innerText = currentUser.name;
         document.getElementById('nav-u').style.display = currentUser.userRoles.includes("Admin") ? "flex" : "none";
         document.getElementById('nav-s').style.display = currentUser.userRoles.includes("Admin") ? "flex" : "none";
@@ -186,97 +190,75 @@
             const isLocked = !currentUser.userRoles.includes("Admin") && !currentUser.userRoles.includes(r.step) && !isDone;
             return `<tr class="${isDone ? 'row-complete' : ''} ${isLocked ? 'row-locked' : ''}">
                 <td><b onclick="openHist(${i})" style="cursor:pointer; color:var(--accent);">${r.name}</b></td>
-                <td>
-                    ${r.servs.join(", ")} 
-                    <i class="fas fa-edit" onclick="editServs(${i})" style="cursor:pointer; font-size:10px; margin-left:5px; color:#aaa;"></i>
-                </td>
+                <td>${r.servs.join(", ")} <i class="fas fa-edit" onclick="editServs(${i})" style="cursor:pointer; font-size:10px; color:#aaa;"></i></td>
                 <td><span class="badge">${r.step}</span></td>
                 <td>
-                    <select id="nr-${i}" style="padding:4px; font-size:11px;">
-                        ${config.roles.map(x=>`<option ${r.step===x?'selected':''}>${x}</option>`).join('')}
-                        <option value="COMPLETE" ${isDone?'selected':''}>COMPLETE</option>
-                    </select>
+                    <div style="display:flex; gap:5px;">
+                        <select id="nr-${i}">${config.roles.map(x=>`<option ${r.step===x?'selected':''}>${x}</option>`).join('')}<option value="COMPLETE" ${isDone?'selected':''}>COMPLETE</option></select>
+                        <select id="nrm-${i}">${config.rooms.map(x=>`<option ${r.room===x?'selected':''}>${x}</option>`).join('')}</select>
+                    </div>
                 </td>
-                <td>
-                    ${!isDone ? `<button class="btn btn-primary" style="padding:5px 10px;" onclick="forward(${i})">Send</button>` : 'Done'}
-                </td>
+                <td>${!isDone ? `<button class="btn btn-primary" onclick="forward(${i})">Send</button>` : '✓'}</td>
             </tr>`;
         }).join('');
+
+        document.getElementById('staffTable').innerHTML = users.map((u, i) => `<tr><td>${u.name}</td><td>${u.userRoles.join(", ")}</td><td>${u.isActive}</td><td><button onclick="toggleUser(${i})">Toggle</button></td></tr>`).join('');
+        
+        document.getElementById('listS').innerHTML = config.services.map(x => `<div>${x}</div>`).join('');
+        document.getElementById('listR').innerHTML = config.roles.map(x => `<div>${x}</div>`).join('');
+        document.getElementById('listRm').innerHTML = config.rooms.map(x => `<div>${x}</div>`).join('');
 
         renderPanes();
     }
 
     function renderPanes() {
-        document.getElementById('availServ').innerHTML = config.services.filter(x => !tmpS.includes(x)).map(x => `<div class="pane-item" onclick="tmpS.push('${x}'); renderPanes();">${x} <i class="fas fa-plus"></i></div>`).join('');
-        document.getElementById('selServ').innerHTML = tmpS.map(x => `<div class="pane-item" onclick="tmpS=tmpS.filter(v=>v!=='${x}'); renderPanes();">${x} <i class="fas fa-times"></i></div>`).join('');
+        document.getElementById('availServ').innerHTML = config.services.filter(x => !tmpS.includes(x)).map(x => `<div class="pane-item" onclick="tmpS.push('${x}'); renderPanes();">${x} +</div>`).join('');
+        document.getElementById('selServ').innerHTML = tmpS.map(x => `<div class="pane-item" onclick="tmpS=tmpS.filter(v=>v!=='${x}'); renderPanes();">${x} x</div>`).join('');
+        document.getElementById('availRoles').innerHTML = config.roles.filter(x=>!tmpR.includes(x)).map(x=>`<div class="pane-item" onclick="tmpR.push('${x}'); renderPanes();">${x} +</div>`).join('');
+        document.getElementById('selRoles').innerHTML = tmpR.map(x=>`<div class="pane-item" onclick="tmpR=tmpR.filter(v=>v!=='${x}'); renderPanes();">${x} x</div>`).join('');
     }
 
-    function saveNewReq() {
-        const n = document.getElementById('inName').value;
-        if(!n || tmpS.length === 0) return alert("Fill Name and Services");
-        reqs.push({
-            name: n.toUpperCase(), dept: document.getElementById('inDept').value,
-            servs: [...tmpS], step: config.roles[0], room: config.rooms[0],
-            history: [{step: "Registration", by: currentUser.name, time: new Date()}]
-        });
-        tmpS = []; document.getElementById('inName').value = ''; 
-        saveAll(); nav('view-dash', document.querySelector('.nav-item'));
-    }
-
-    // --- Service Editing After Registration ---
     function editServs(i) {
-        const r = reqs[i];
-        tmpS = [...r.servs];
-        document.getElementById('modalTitle').innerText = "Update Services: " + r.name;
-        document.getElementById('modalBody').innerHTML = `
-            <div style="display:flex; gap:10px;">
-                <div class="pane-box" id="editAvail"></div>
-                <div class="pane-box" id="editSel" style="background:#f0fdf4;"></div>
-            </div>`;
-        
-        const updatePanes = () => {
-            document.getElementById('editAvail').innerHTML = config.services.filter(x => !tmpS.includes(x)).map(x => `<div class="pane-item" onclick="addEditS('${x}', ${i})">${x} +</div>`).join('');
-            document.getElementById('editSel').innerHTML = tmpS.map(x => `<div class="pane-item" onclick="remEditS('${x}', ${i})">${x} x</div>`).join('');
+        tmpS = [...reqs[i].servs];
+        document.getElementById('modalTitle').innerText = "Edit Services";
+        document.getElementById('modalBody').innerHTML = `<div style="display:flex; gap:10px;"><div class="pane-box" id="eAvail"></div><div class="pane-box" id="eSel"></div></div>`;
+        const up = () => {
+            document.getElementById('eAvail').innerHTML = config.services.filter(x => !tmpS.includes(x)).map(x => `<div class="pane-item" onclick="tmpS.push('${x}'); up();">${x} +</div>`).join('');
+            document.getElementById('eSel').innerHTML = tmpS.map(x => `<div class="pane-item" onclick="tmpS=tmpS.filter(v=>v!=='${x}'); up();">${x} x</div>`).join('');
         };
-        
-        window.addEditS = (s, idx) => { tmpS.push(s); updatePanes(); };
-        window.remEditS = (s, idx) => { tmpS = tmpS.filter(v=>v!==s); updatePanes(); };
-        
-        updatePanes();
-        document.getElementById('modalFooter').innerHTML = `<button class="btn btn-primary" onclick="confirmEdit(${i})">Save Changes</button>`;
+        up();
+        document.getElementById('modalFooter').innerHTML = `<button class="btn btn-primary" onclick="reqs[${i}].servs=[...tmpS]; saveAll(); closeModal(); render();">Save</button>`;
         document.getElementById('appModal').style.display='flex';
     }
 
-    function confirmEdit(i) {
-        reqs[i].servs = [...tmpS];
-        reqs[i].history.push({step: "Services Updated", by: currentUser.name, time: new Date()});
-        saveAll(); closeModal(); render();
-    }
-
     function forward(i) {
-        const next = document.getElementById(`nr-${i}`).value;
-        reqs[i].step = next;
-        reqs[i].history.push({step: next, by: currentUser.name, time: new Date()});
+        const nr = document.getElementById(`nr-${i}`).value;
+        const nrm = document.getElementById(`nrm-${i}`).value;
+        reqs[i].step = nr; reqs[i].room = nrm;
+        reqs[i].history.push({step: nr, by: currentUser.name, time: new Date()});
         saveAll(); render();
     }
 
     function openHist(i) {
-        const r = reqs[i];
-        document.getElementById('modalTitle').innerText = r.name + " History";
-        document.getElementById('modalBody').innerHTML = r.history.map(h => `
-            <div style="margin-bottom:10px; border-left:3px solid var(--accent); padding-left:10px;">
-                <b>${h.step}</b> <small>(${new Date(h.time).toLocaleString()})</small><br>
-                <small>By: ${h.by}</small>
-            </div>`).join('');
+        document.getElementById('modalTitle').innerText = "Timeline";
+        document.getElementById('modalBody').innerHTML = reqs[i].history.map(h => `<div><b>${h.step}</b> - ${h.by} <br><small>${new Date(h.time).toLocaleString()}</small></div><hr>`).join('');
         document.getElementById('modalFooter').innerHTML = `<button class="btn" onclick="closeModal()">Close</button>`;
         document.getElementById('appModal').style.display='flex';
     }
 
-    function saveAll() { localStorage.setItem('hu_reqs', JSON.stringify(reqs)); }
+    function saveNewReq() {
+        reqs.push({name: document.getElementById('inName').value.toUpperCase(), dept: document.getElementById('inDept').value, servs: [...tmpS], step: config.roles[0], room: config.rooms[0], history: [{step: "Registered", by: currentUser.name, time: new Date()}]});
+        tmpS = []; saveAll(); render(); nav('view-dash', document.querySelector('.nav-item'));
+    }
+
+    function saveStaff() { users.push({name: document.getElementById('uFull').value, login: document.getElementById('uId').value, pass: document.getElementById('uPw').value, userRoles: [...tmpR], isActive: true}); tmpR = []; saveAll(); render(); }
+    function saveAll() { localStorage.setItem('hu_reqs', JSON.stringify(reqs)); localStorage.setItem('hu_users', JSON.stringify(users)); localStorage.setItem('hu_config', JSON.stringify(config)); }
+    function addSet(k, id) { config[k].push(document.getElementById(id).value); saveAll(); render(); }
+    function toggleUser(i) { users[i].isActive = !users[i].isActive; saveAll(); render(); }
     function nav(id, el) { document.querySelectorAll('.section').forEach(s => s.style.display='none'); document.getElementById(id).style.display='block'; document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); el.classList.add('active'); render(); }
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
     function closeModal() { document.getElementById('appModal').style.display='none'; }
-    function exportData() { alert("Data Exported to Console (Check F12)"); console.log(JSON.stringify(reqs)); }
+    function exportData() { console.log(JSON.stringify({config, users, reqs})); alert("Check Console"); }
 </script>
 </body>
 </html>
